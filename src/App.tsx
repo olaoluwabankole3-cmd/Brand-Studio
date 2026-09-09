@@ -421,6 +421,21 @@ export default function App() {
     persistProjects(nextProjects, nextActiveMap);
   };
 
+  const handleProjectActivity = () => {
+    if (!activeProjectId) return;
+
+    setProjects(currentProjects => {
+      const now = new Date().toISOString();
+      const nextProjects = currentProjects.map(project =>
+        project.id === activeProjectId
+          ? { ...project, updatedAt: now, lastOpenedAt: now }
+          : project
+      );
+      persistProjects(nextProjects, activeProjectByBrand);
+      return nextProjects;
+    });
+  };
+
   const handleNavigation = (tab: string) => {
     if ((tab === 'studio' || tab === 'slides') && !activeProject) {
       setActiveTab('projects');
@@ -517,6 +532,7 @@ export default function App() {
             brandSettings={brandSettings}
             projectId={activeProject!.id}
             projectName={activeProject!.name}
+            onProjectActivity={handleProjectActivity}
             onAddExport={handleAddExport}
           />
         );
@@ -527,6 +543,7 @@ export default function App() {
             brandSettings={brandSettings}
             projectId={activeProject!.id}
             projectName={activeProject!.name}
+            onProjectActivity={handleProjectActivity}
             onAddExport={handleAddExport}
           />
         );
@@ -595,10 +612,12 @@ export default function App() {
         );
       case 'exports':
         return (
-          <ExportHistory 
-            exportsList={exportsList} 
+          <ExportHistory
+            exportsList={exportsList}
             onClearHistory={handleClearHistory}
             brandSettings={brandSettings}
+            activeProjectId={activeProjectId}
+            activeProjectName={activeProject?.name || null}
           />
         );
       case 'settings':
