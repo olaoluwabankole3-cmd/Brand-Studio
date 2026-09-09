@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -421,7 +421,7 @@ export default function App() {
     persistProjects(nextProjects, nextActiveMap);
   };
 
-  const handleProjectActivity = () => {
+  const handleProjectActivity = useCallback(() => {
     if (!activeProjectId) return;
 
     setProjects(currentProjects => {
@@ -431,10 +431,17 @@ export default function App() {
           ? { ...project, updatedAt: now, lastOpenedAt: now }
           : project
       );
-      persistProjects(nextProjects, activeProjectByBrand);
+
+      try {
+        localStorage.setItem('apex_sync_projects_v3', JSON.stringify(nextProjects));
+        localStorage.setItem('apex_sync_active_projects_v3', JSON.stringify(activeProjectByBrand));
+      } catch (err) {
+        console.error('Failed to update project activity:', err);
+      }
+
       return nextProjects;
     });
-  };
+  }, [activeProjectId, activeProjectByBrand]);
 
   const handleNavigation = (tab: string) => {
     if ((tab === 'studio' || tab === 'slides') && !activeProject) {
