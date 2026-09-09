@@ -859,7 +859,10 @@ export default function Editor({
       // Log export transaction
       onAddExport({
         id: uniqueId,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toISOString(),
+        brandSnapshot: { ...brandSettings },
+        projectId,
+        projectName,
         templateId,
         templateName: TEMPLATE_PRESETS.find(t => t.id === templateId)?.name || 'Template',
         headline,
