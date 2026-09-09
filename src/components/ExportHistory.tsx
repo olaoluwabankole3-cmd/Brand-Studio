@@ -767,7 +767,7 @@ export default function ExportHistory({ exportsList, onClearHistory, brandSettin
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7);
       doc.setTextColor(120, 120, 120);
-      doc.text(`VERIFIED RENDER SPECIFICATION: 1200 X 1200 PX  •  SECURE TRANSACTION ID: ${item.id}`, 20, 263);
+      doc.text(`RENDER SPECIFICATION: 1200 X 1200 PX  •  EXPORT ID: ${item.id}`, 20, 263);
 
       // 5. Page Footer
       doc.setDrawColor(230, 230, 230);
@@ -776,7 +776,7 @@ export default function ExportHistory({ exportsList, onClearHistory, brandSettin
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(140, 140, 140);
-      doc.text("APEX SYNC STUDIO • CONFIDENTIAL SPECIFICATION DOCUMENT", 15, 282);
+      doc.text("APEX SYNC STUDIO • EXPORT SPECIFICATION", 15, 282);
       doc.text("PAGE 1 OF 1", 195, 282, { align: 'right' });
 
       // Save PDF Document
@@ -794,61 +794,52 @@ export default function ExportHistory({ exportsList, onClearHistory, brandSettin
     }
   };
 
-  // Generate programmatic mocks if empty
-  const mockExports: ExportHistoryItem[] = [
-    {
-      id: 'mock-1',
-      timestamp: 'Today, 02:44 PM',
-      templateId: 'enterprise-philosophy',
-      templateName: 'Enterprise Philosophy Layout',
-      headline: "Companies Don't Scale Because They Hire More People",
-      format: 'png',
-      resolution: '1200 x 1200 px (LinkedIn)'
-    },
-    {
-      id: 'mock-2',
-      timestamp: 'Today, 11:15 AM',
-      templateId: 'enterprise-blueprint',
-      templateName: 'Enterprise Blueprint Layout',
-      headline: 'Architecting the Autonomous State Machine',
-      format: 'png',
-      resolution: '1200 x 1200 px (LinkedIn)'
-    },
-    {
-      id: 'mock-3',
-      timestamp: 'Yesterday, 06:12 PM',
-      templateId: 'industry-spotlight',
-      templateName: 'Industry Spotlight Layout',
-      headline: 'Autonomous Workflows are the New Standard Suite',
-      format: 'jpg',
-      resolution: '1200 x 1200 px (LinkedIn)'
-    },
-    {
-      id: 'mock-4',
-      timestamp: 'Yesterday, 04:30 PM',
-      templateId: 'building-apex',
-      templateName: 'Building Apex Layout',
-      headline: 'A Culture of Execution, Not Consensus',
-      format: 'svg',
-      resolution: 'Vector Graphic Output'
-    },
-    {
-      id: 'mock-5',
-      timestamp: 'July 28, 2026',
-      templateId: 'enterprise-vision',
-      templateName: 'Enterprise Vision Layout',
-      headline: 'The Sovereign Protocol Era is Arriving',
-      format: 'png',
-      resolution: '1200 x 1200 px (LinkedIn)'
+  const activeList = exportsList || [];
+
+  const parseExportDate = (timestamp: string) => {
+    const parsed = new Date(timestamp);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const formatExportTimestamp = (timestamp: string) => {
+    const parsed = parseExportDate(timestamp);
+    if (!parsed) return timestamp;
+
+    return parsed.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  const todayItems = activeList.filter((item) => {
+    const parsed = parseExportDate(item.timestamp);
+    if (!parsed) return item.timestamp.includes('Today') || item.timestamp.includes(':');
+    return parsed >= startOfToday;
+  });
+
+  const yesterdayItems = activeList.filter((item) => {
+    const parsed = parseExportDate(item.timestamp);
+    if (!parsed) return item.timestamp.includes('Yesterday');
+    return parsed >= startOfYesterday && parsed < startOfToday;
+  });
+
+  const olderItems = activeList.filter((item) => {
+    const parsed = parseExportDate(item.timestamp);
+    if (!parsed) {
+      return !item.timestamp.includes('Today') &&
+        !item.timestamp.includes('Yesterday') &&
+        !item.timestamp.includes(':');
     }
-  ];
-
-  const activeList = (exportsList && exportsList.length > 0) ? exportsList : mockExports;
-
-  // Group items by timeframes
-  const todayItems = activeList.filter(item => item.timestamp.includes('Today') || item.timestamp.includes(':'));
-  const yesterdayItems = activeList.filter(item => item.timestamp.includes('Yesterday'));
-  const olderItems = activeList.filter(item => !item.timestamp.includes('Today') && !item.timestamp.includes('Yesterday') && !item.timestamp.includes(':'));
+    return parsed < startOfYesterday;
+  });
 
   const renderSection = (title: string, items: ExportHistoryItem[]) => {
     if (items.length === 0) return null;
@@ -877,7 +868,7 @@ export default function ExportHistory({ exportsList, onClearHistory, brandSettin
                     <span className="text-[10px] text-[#C7A248] font-mono tracking-wider font-semibold">
                       {item.templateName}
                     </span>
-                    <span className="text-[10px] text-neutral-500 font-mono">• {item.timestamp}</span>
+                    <span className="text-[10px] text-neutral-500 font-mono">• {formatExportTimestamp(item.timestamp)}</span>
                   </div>
                   
                   <h3 className="text-sm font-semibold font-['Space_Grotesk'] text-white tracking-wide max-w-2xl leading-snug break-words">
@@ -895,7 +886,7 @@ export default function ExportHistory({ exportsList, onClearHistory, brandSettin
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-9 h-9 rounded-lg bg-neutral-950 border border-neutral-900 flex items-center justify-center text-neutral-500"
-                    title="Audit Log Verified"
+                    title="Export record"
                   >
                     <FileCheck2 className="w-4 h-4 text-[#C7A248]" />
                   </div>
