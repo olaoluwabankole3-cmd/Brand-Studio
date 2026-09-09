@@ -375,7 +375,11 @@ export default function Projects({
                           {project.status === 'archived' ? 'Restore' : 'Archive'}
                         </button>
                         <button
-                          onClick={() => onDeleteProject(project.id)}
+                          onClick={() => {
+                            if (window.confirm(`Delete "${project.name}"? Working drafts and deck state for this project will be removed.`)) {
+                              onDeleteProject(project.id);
+                            }
+                          }}
                           className="flex items-center gap-2 px-3 py-2 bg-neutral-950 border border-neutral-800 text-neutral-600 hover:text-rose-400 hover:border-rose-500/20 rounded-lg text-[11px] font-semibold"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
