@@ -57,10 +57,27 @@ export interface BrandProfile {
   updatedAt: string;
 }
 
+export type ProjectStatus = 'active' | 'archived';
+
+export interface StudioProject {
+  id: string;
+  brandId: string;
+  name: string;
+  campaignName: string;
+  description: string;
+  status: ProjectStatus;
+  createdAt: string;
+  updatedAt: string;
+  lastOpenedAt: string;
+  duplicatedFromId?: string;
+}
+
 export interface ExportHistoryItem {
   id: string;
   timestamp: string;
   brandSnapshot?: BrandSettings;
+  projectId?: string;
+  projectName?: string;
   templateId: TemplateId;
   templateName: string;
   headline: string;
