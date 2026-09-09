@@ -107,9 +107,19 @@ export default function Editor({
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasScale, setCanvasScale] = useState(0.4);
+  const restoredTemplateRef = useRef<TemplateId | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
-  // Sync templates default copy and sizing when changing templates
+  // Sync template defaults when the user intentionally changes templates.
   useEffect(() => {
+    if (restoredTemplateRef.current) {
+      if (restoredTemplateRef.current === templateId) {
+        restoredTemplateRef.current = null;
+        return;
+      }
+      restoredTemplateRef.current = null;
+    }
+
     const selected = TEMPLATE_PRESETS.find(t => t.id === templateId);
     if (selected) {
       setHeadline(selected.defaultHeadline);
@@ -169,6 +179,137 @@ export default function Editor({
     setSubtitleAlign('default');
     setQuoteAlign('default');
   }, [templateId]);
+
+  // Restore the most recent working draft from this browser.
+  useEffect(() => {
+    try {
+      const cachedDraft = localStorage.getItem('apex_sync_editor_draft_v2');
+      if (cachedDraft) {
+        const parsed = JSON.parse(cachedDraft);
+
+        if (parsed.templateId && TEMPLATE_PRESETS.some(t => t.id === parsed.templateId)) {
+          restoredTemplateRef.current = parsed.templateId as TemplateId;
+          setTemplateId(parsed.templateId as TemplateId);
+        }
+
+        if (typeof parsed.series === 'string') setSeries(parsed.series);
+        if (typeof parsed.episode === 'string') setEpisode(parsed.episode);
+        if (typeof parsed.day === 'string') setDay(parsed.day);
+        if (typeof parsed.headline === 'string') setHeadline(parsed.headline);
+        if (typeof parsed.subtitle === 'string') setSubtitle(parsed.subtitle);
+        if (typeof parsed.quote === 'string') setQuote(parsed.quote);
+        if (typeof parsed.footerLeft === 'string') setFooterLeft(parsed.footerLeft);
+        if (typeof parsed.footerCenter === 'string') setFooterCenter(parsed.footerCenter);
+        if (typeof parsed.footerRight === 'string') setFooterRight(parsed.footerRight);
+        if (typeof parsed.backgroundId === 'string') setBackgroundId(parsed.backgroundId as BackgroundId);
+
+        if (typeof parsed.showLogo === 'boolean') setShowLogo(parsed.showLogo);
+        if (typeof parsed.showFooter === 'boolean') setShowFooter(parsed.showFooter);
+        if (typeof parsed.showDayCounter === 'boolean') setShowDayCounter(parsed.showDayCounter);
+        if (typeof parsed.showEpisode === 'boolean') setShowEpisode(parsed.showEpisode);
+        if (typeof parsed.showQrCode === 'boolean') setShowQrCode(parsed.showQrCode);
+        if (typeof parsed.showWebsite === 'boolean') setShowWebsite(parsed.showWebsite);
+
+        if (typeof parsed.headlineSize === 'number') setHeadlineSize(parsed.headlineSize);
+        if (typeof parsed.headlineOffset === 'number') setHeadlineOffset(parsed.headlineOffset);
+        if (typeof parsed.headlineAlign === 'string') setHeadlineAlign(parsed.headlineAlign);
+        if (typeof parsed.subtitleSize === 'number') setSubtitleSize(parsed.subtitleSize);
+        if (typeof parsed.subtitleOffset === 'number') setSubtitleOffset(parsed.subtitleOffset);
+        if (typeof parsed.subtitleAlign === 'string') setSubtitleAlign(parsed.subtitleAlign);
+        if (typeof parsed.quoteSize === 'number') setQuoteSize(parsed.quoteSize);
+        if (typeof parsed.quoteOffset === 'number') setQuoteOffset(parsed.quoteOffset);
+        if (typeof parsed.quoteAlign === 'string') setQuoteAlign(parsed.quoteAlign);
+        if (typeof parsed.metaSize === 'number') setMetaSize(parsed.metaSize);
+        if (typeof parsed.metaOffset === 'number') setMetaOffset(parsed.metaOffset);
+        if (typeof parsed.footerSize === 'number') setFooterSize(parsed.footerSize);
+        if (typeof parsed.footerOffset === 'number') setFooterOffset(parsed.footerOffset);
+        if (typeof parsed.logoSize === 'number') setLogoSize(parsed.logoSize);
+        if (typeof parsed.logoOffset === 'number') setLogoOffset(parsed.logoOffset);
+      }
+    } catch (err) {
+      console.error('Failed to restore Brand Studio draft:', err);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, []);
+
+  // Autosave editor state after hydration so navigation or refresh does not destroy work.
+  useEffect(() => {
+    if (!draftLoaded) return;
+
+    try {
+      localStorage.setItem('apex_sync_editor_draft_v2', JSON.stringify({
+        templateId,
+        series,
+        episode,
+        day,
+        headline,
+        subtitle,
+        quote,
+        footerLeft,
+        footerCenter,
+        footerRight,
+        backgroundId,
+        showLogo,
+        showFooter,
+        showDayCounter,
+        showEpisode,
+        showQrCode,
+        showWebsite,
+        headlineSize,
+        headlineOffset,
+        headlineAlign,
+        subtitleSize,
+        subtitleOffset,
+        subtitleAlign,
+        quoteSize,
+        quoteOffset,
+        quoteAlign,
+        metaSize,
+        metaOffset,
+        footerSize,
+        footerOffset,
+        logoSize,
+        logoOffset
+      }));
+    } catch (err) {
+      console.error('Failed to autosave Brand Studio draft:', err);
+    }
+  }, [
+    draftLoaded,
+    templateId,
+    series,
+    episode,
+    day,
+    headline,
+    subtitle,
+    quote,
+    footerLeft,
+    footerCenter,
+    footerRight,
+    backgroundId,
+    showLogo,
+    showFooter,
+    showDayCounter,
+    showEpisode,
+    showQrCode,
+    showWebsite,
+    headlineSize,
+    headlineOffset,
+    headlineAlign,
+    subtitleSize,
+    subtitleOffset,
+    subtitleAlign,
+    quoteSize,
+    quoteOffset,
+    quoteAlign,
+    metaSize,
+    metaOffset,
+    footerSize,
+    footerOffset,
+    logoSize,
+    logoOffset
+  ]);
 
   const handleResetSizing = () => {
     switch (templateId) {
