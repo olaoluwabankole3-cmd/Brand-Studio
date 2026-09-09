@@ -109,7 +109,14 @@ export default function App() {
     try {
       localStorage.removeItem('apex_sync_brand_settings_v1');
       localStorage.removeItem('apex_sync_exports_v1');
-      alert('Apex Sync brand state fully purged and reset to system defaults.');
+      localStorage.removeItem('apex_sync_editor_draft_v2');
+      localStorage.removeItem('apex_carousel_slides_v1');
+      localStorage.removeItem('apex_carousel_pillar_v1');
+      localStorage.removeItem('apex_carousel_day_v1');
+      localStorage.removeItem('apex_carousel_episode_v1');
+      localStorage.removeItem('apex_carousel_series_v1');
+      localStorage.removeItem('apex_carousel_workspace_v2');
+      alert('Brand Studio workspace reset to system defaults.');
       setActiveTab('dashboard');
     } catch (err) {
       console.error('Failed to reset application state:', err);
