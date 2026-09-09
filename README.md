@@ -16,6 +16,8 @@ The product currently includes:
 - Export history stored locally in the browser
 - Optional server-side content generation through Gemini, with local fallback content
 - Browser persistence for brand settings and export records
+- Multi-brand profile switching for separate company/client brand kits
+- Autosaved single-card drafts and persisted carousel workspace state
 
 ## Why it exists
 
@@ -122,11 +124,9 @@ Brand Studio is being developed around five principles:
 
 The next product iteration focuses on:
 
-- Real dashboard metrics instead of demonstration statistics
-- Honest empty states instead of mock export records
-- Autosaved editor and carousel sessions
-- Recovery of in-progress work after navigation or refresh
-- Multi-brand workspaces
+- Project-level recovery and version history
+- Better empty-state onboarding and first-run guidance
+- Project-scoped workspaces that isolate drafts and decks by brand
 - Project/deck naming and project history
 - Import/export of workspace data
 - Cloud synchronization and team collaboration
