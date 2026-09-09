@@ -249,6 +249,7 @@ export default function App() {
 
       const updatedProfiles = [...currentProfiles, newProfile];
       setActiveBrandId(newProfile.id);
+      setActiveTab('projects');
       persistBrandProfiles(updatedProfiles, newProfile.id);
       return updatedProfiles;
     });
@@ -561,6 +562,7 @@ export default function App() {
             brandSettings={brandSettings}
             projectId={activeProject!.id}
             projectName={activeProject!.name}
+            projectCampaignName={activeProject!.campaignName}
             onProjectActivity={handleProjectActivity}
             onAddExport={handleAddExport}
           />
@@ -572,6 +574,7 @@ export default function App() {
             brandSettings={brandSettings}
             projectId={activeProject!.id}
             projectName={activeProject!.name}
+            projectCampaignName={activeProject!.campaignName}
             onProjectActivity={handleProjectActivity}
             onAddExport={handleAddExport}
           />
