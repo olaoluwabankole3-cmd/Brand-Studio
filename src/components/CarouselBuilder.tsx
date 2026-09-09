@@ -36,6 +36,7 @@ interface CarouselBuilderProps {
   brandSettings: BrandSettings;
   projectId: string;
   projectName: string;
+  projectCampaignName: string;
   onProjectActivity: () => void;
   onAddExport: (item: ExportHistoryItem) => void;
 }
@@ -122,6 +123,7 @@ export default function CarouselBuilder({
   brandSettings,
   projectId,
   projectName,
+  projectCampaignName,
   onProjectActivity,
   onAddExport
 }: CarouselBuilderProps) {
@@ -129,7 +131,7 @@ export default function CarouselBuilder({
   const [activePillar, setActivePillar] = useState<string>('philosophy');
   const [dayCounter, setDayCounter] = useState<string>('DAY 01');
   const [episodeCounter, setEpisodeCounter] = useState<string>('EPISODE 01');
-  const [seriesName, setSeriesName] = useState<string>('Enterprise Intelligence');
+  const [seriesName, setSeriesName] = useState<string>(projectCampaignName || 'Enterprise Intelligence');
   
   // Footer settings
   const currentMonthLabel = new Intl.DateTimeFormat('en-US', {
