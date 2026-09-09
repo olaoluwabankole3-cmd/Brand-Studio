@@ -39,6 +39,7 @@ interface EditorProps {
   initialTemplateId: TemplateId;
   autoGenerateOnLoad: boolean;
   brandSettings: BrandSettings;
+  brandId: string;
   projectId: string;
   projectName: string;
   projectCampaignName: string;
@@ -50,6 +51,7 @@ export default function Editor({
   initialTemplateId, 
   autoGenerateOnLoad,
   brandSettings,
+  brandId,
   projectId,
   projectName,
   projectCampaignName,
@@ -536,6 +538,7 @@ export default function Editor({
         onAddExport({
           id: Math.random().toString(36).substr(2, 9),
           timestamp: new Date().toISOString(),
+          brandId,
           brandSnapshot: { ...brandSettings },
           projectId,
           projectName,
@@ -862,6 +865,7 @@ export default function Editor({
       onAddExport({
         id: uniqueId,
         timestamp: new Date().toISOString(),
+        brandId,
         brandSnapshot: { ...brandSettings },
         projectId,
         projectName,
