@@ -1,0 +1,6 @@
+{
+  "name": "Apex Sync Brand Studio",
+  "description": "The Intelligent Design System for Enterprise Content.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
