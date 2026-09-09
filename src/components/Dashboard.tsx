@@ -26,12 +26,18 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onSelectTemplate, onViewSlides, exportCount }: DashboardProps) {
-  // Stats summary data
+  // Product metrics are derived from actual application state.
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? 'Good Morning' :
+    hour < 17 ? 'Good Afternoon' :
+    'Good Evening';
+
   const stats = [
-    { label: 'Active Systems', value: '5', change: 'Fully Configured', isNeutral: true },
-    { label: 'Exports Today', value: (exportCount + 12).toString(), change: '+34% from yesterday', isNeutral: false },
-    { label: 'Active Series', value: 'Enterprise Intelligence', change: 'Season One Active', isNeutral: true },
-    { label: 'Studio Theme', value: 'Season One', change: 'Matte & Gold Accent', isNeutral: true },
+    { label: 'Template Systems', value: TEMPLATE_PRESETS.length.toString(), change: 'Available design structures', isNeutral: true },
+    { label: 'Recorded Exports', value: exportCount.toString(), change: exportCount === 1 ? '1 asset in this browser' : `${exportCount} assets in this browser`, isNeutral: true },
+    { label: 'Design Modes', value: '2', change: 'Single-card + carousel', isNeutral: true },
+    { label: 'Persistence', value: 'Local', change: 'Brand settings & export history', isNeutral: true },
   ];
 
   // Helper icons for the aesthetic representation of the miniature design structure
@@ -163,7 +169,7 @@ export default function Dashboard({ onSelectTemplate, onViewSlides, exportCount 
         <div className="space-y-2">
           <span className="text-xs font-semibold text-[#C7A248] tracking-widest uppercase font-mono block">SYSTEM STATUS ACTIVE</span>
           <h1 className="text-3xl font-bold font-['Space_Grotesk'] tracking-tight text-white">
-            Good Evening, Olaoluwa
+            {greeting}, Olaoluwa
           </h1>
           <p className="text-neutral-400 text-sm max-w-md">
             Welcome back to Brand Studio. Build, edit, and orchestrate high-fidelity corporate brand assets on demand.
@@ -303,7 +309,7 @@ export default function Dashboard({ onSelectTemplate, onViewSlides, exportCount 
                 className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#C7A248]/10 hover:bg-[#C7A248]/20 text-[#C7A248] rounded-lg text-[11px] font-bold transition-colors border border-[#C7A248]/30"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>AI Generate</span>
+                <span>Generate Draft</span>
               </button>
             </div>
           </div>
