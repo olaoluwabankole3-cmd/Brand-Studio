@@ -41,6 +41,7 @@ interface EditorProps {
   brandSettings: BrandSettings;
   projectId: string;
   projectName: string;
+  onProjectActivity: () => void;
   onAddExport: (item: ExportHistoryItem) => void;
 }
 
@@ -50,6 +51,7 @@ export default function Editor({
   brandSettings,
   projectId,
   projectName,
+  onProjectActivity,
   onAddExport
 }: EditorProps) {
   // Canvas settings state
@@ -280,12 +282,14 @@ export default function Editor({
         logoSize,
         logoOffset
       }));
+      onProjectActivity();
     } catch (err) {
       console.error('Failed to autosave Brand Studio draft:', err);
     }
   }, [
     draftLoaded,
     editorStorageKey,
+    onProjectActivity,
     templateId,
     series,
     episode,
