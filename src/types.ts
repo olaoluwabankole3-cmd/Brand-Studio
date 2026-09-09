@@ -60,6 +60,7 @@ export interface BrandProfile {
 export interface ExportHistoryItem {
   id: string;
   timestamp: string;
+  brandSnapshot?: BrandSettings;
   templateId: TemplateId;
   templateName: string;
   headline: string;
