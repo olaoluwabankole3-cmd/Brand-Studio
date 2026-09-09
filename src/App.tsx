@@ -270,15 +270,37 @@ export default function App() {
   };
 
   const handleDeleteActiveBrand = () => {
-    setBrandProfiles(currentProfiles => {
-      if (currentProfiles.length <= 1) return currentProfiles;
+    if (brandProfiles.length <= 1) return;
 
-      const updatedProfiles = currentProfiles.filter(profile => profile.id !== activeBrandId);
-      const nextActiveId = updatedProfiles[0].id;
-      setActiveBrandId(nextActiveId);
-      persistBrandProfiles(updatedProfiles, nextActiveId);
-      return updatedProfiles;
+    const brandProjectsToDelete = projects.filter(project => project.brandId === activeBrandId);
+    brandProjectsToDelete.forEach(project => {
+      try {
+        clearProjectStorage(project.id);
+      } catch (err) {
+        console.error('Failed to clear project data while deleting brand:', err);
+      }
     });
+
+    const updatedProfiles = brandProfiles.filter(profile => profile.id !== activeBrandId);
+    const updatedProjects = projects.filter(project => project.brandId !== activeBrandId);
+    const nextActiveId = updatedProfiles[0].id;
+    const nextActiveMap = { ...activeProjectByBrand };
+    delete nextActiveMap[activeBrandId];
+
+    setBrandProfiles(updatedProfiles);
+    setProjects(updatedProjects);
+    setActiveBrandId(nextActiveId);
+    setActiveProjectByBrand(nextActiveMap);
+    persistBrandProfiles(updatedProfiles, nextActiveId);
+    persistProjects(updatedProjects, nextActiveMap);
+
+    const nextProjectId = nextActiveMap[nextActiveId];
+    const hasOpenProject = updatedProjects.some(
+      project => project.id === nextProjectId && project.brandId === nextActiveId && project.status === 'active'
+    );
+    if (!hasOpenProject) {
+      setActiveTab('projects');
+    }
   };
 
   const handleCreateProject = (input: { name: string; campaignName: string; description: string }) => {
