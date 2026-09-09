@@ -906,15 +906,15 @@ export default function Editor({
           <h2 className="text-lg font-bold font-['Space_Grotesk'] text-white">System Configuration</h2>
         </div>
 
-        {/* AI Co-Creator Block */}
+        {/* Optional drafting assistant */}
         <div className="p-6 border-b border-[#1F1F1F] bg-[#111111]/40 space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#C7A248]" />
-              AI Prompt Orchestrator
+              Draft Assistant
             </span>
             <span className="text-[9px] px-1.5 py-0.5 bg-[#C7A248]/10 border border-[#C7A248]/20 text-[#C7A248] font-mono rounded">
-              GEMINI 2.5
+              CONTENT ENGINE
             </span>
           </div>
           
@@ -939,10 +939,10 @@ export default function Editor({
               <div className="text-[10px] text-[#C7A248] bg-[#C7A248]/5 border border-[#C7A248]/25 rounded-lg p-3 space-y-1">
                 <div className="font-bold flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#C7A248] animate-pulse shrink-0" />
-                  <span>AI Backend Rate-Limited</span>
+                  <span>Draft Service Unavailable</span>
                 </div>
                 <p className="text-neutral-400 leading-relaxed font-sans">
-                  The Gemini API is currently experiencing rate-limits or quota limits. We have loaded a premium, high-fidelity brand preset to ensure you can continue designing without interruption.
+                  The optional drafting service is currently unavailable. A local brand preset has been loaded so you can continue designing without interruption.
                 </p>
               </div>
             )}
