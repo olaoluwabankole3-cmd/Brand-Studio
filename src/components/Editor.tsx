@@ -39,13 +39,17 @@ interface EditorProps {
   initialTemplateId: TemplateId;
   autoGenerateOnLoad: boolean;
   brandSettings: BrandSettings;
+  projectId: string;
+  projectName: string;
   onAddExport: (item: ExportHistoryItem) => void;
 }
 
 export default function Editor({ 
   initialTemplateId, 
-  autoGenerateOnLoad, 
+  autoGenerateOnLoad,
   brandSettings,
+  projectId,
+  projectName,
   onAddExport
 }: EditorProps) {
   // Canvas settings state
@@ -109,6 +113,7 @@ export default function Editor({
   const [canvasScale, setCanvasScale] = useState(0.4);
   const restoredTemplateRef = useRef<TemplateId | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  const editorStorageKey = `apex_sync_project_${projectId}_editor_v1`;
 
   // Sync template defaults when the user intentionally changes templates.
   useEffect(() => {
@@ -183,7 +188,10 @@ export default function Editor({
   // Restore the most recent working draft from this browser.
   useEffect(() => {
     try {
-      const cachedDraft = localStorage.getItem('apex_sync_editor_draft_v2');
+      const scopedDraft = localStorage.getItem(editorStorageKey);
+      const legacyDraft = localStorage.getItem('apex_sync_editor_draft_v2');
+      const cachedDraft = scopedDraft || legacyDraft;
+
       if (cachedDraft) {
         const parsed = JSON.parse(cachedDraft);
 
@@ -231,14 +239,14 @@ export default function Editor({
     } finally {
       setDraftLoaded(true);
     }
-  }, []);
+  }, [editorStorageKey]);
 
   // Autosave editor state after hydration so navigation or refresh does not destroy work.
   useEffect(() => {
     if (!draftLoaded) return;
 
     try {
-      localStorage.setItem('apex_sync_editor_draft_v2', JSON.stringify({
+      localStorage.setItem(editorStorageKey, JSON.stringify({
         templateId,
         series,
         episode,
@@ -277,6 +285,7 @@ export default function Editor({
     }
   }, [
     draftLoaded,
+    editorStorageKey,
     templateId,
     series,
     episode,
@@ -519,6 +528,8 @@ export default function Editor({
           id: Math.random().toString(36).substr(2, 9),
           timestamp: new Date().toISOString(),
           brandSnapshot: { ...brandSettings },
+          projectId,
+          projectName,
           templateId,
           templateName: TEMPLATE_PRESETS.find(t => t.id === templateId)?.name || 'Template',
           headline,
