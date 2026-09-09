@@ -33,6 +33,7 @@ import { jsPDF } from 'jspdf';
 import { BrandSettings, ExportHistoryItem } from '../types';
 
 interface CarouselBuilderProps {
+  key?: string;
   brandSettings: BrandSettings;
   brandId: string;
   projectId: string;
