@@ -22,10 +22,20 @@ import { TEMPLATE_PRESETS } from '../data';
 interface DashboardProps {
   onSelectTemplate: (id: TemplateId, autoGenerate: boolean) => void;
   onViewSlides?: () => void;
+  onViewProjects: () => void;
   exportCount: number;
+  activeProjectName: string | null;
+  projectCount: number;
 }
 
-export default function Dashboard({ onSelectTemplate, onViewSlides, exportCount }: DashboardProps) {
+export default function Dashboard({
+  onSelectTemplate,
+  onViewSlides,
+  onViewProjects,
+  exportCount,
+  activeProjectName,
+  projectCount
+}: DashboardProps) {
   // Product metrics are derived from actual application state.
   const hour = new Date().getHours();
   const greeting =
@@ -34,10 +44,10 @@ export default function Dashboard({ onSelectTemplate, onViewSlides, exportCount 
     'Good Evening';
 
   const stats = [
+    { label: 'Active Projects', value: projectCount.toString(), change: 'Projects under this brand', isNeutral: true },
+    { label: 'Project Exports', value: exportCount.toString(), change: exportCount === 1 ? '1 asset in current project' : `${exportCount} assets in current project`, isNeutral: true },
     { label: 'Template Systems', value: TEMPLATE_PRESETS.length.toString(), change: 'Available design structures', isNeutral: true },
-    { label: 'Recorded Exports', value: exportCount.toString(), change: exportCount === 1 ? '1 asset in this browser' : `${exportCount} assets in this browser`, isNeutral: true },
-    { label: 'Design Modes', value: '2', change: 'Single-card + carousel', isNeutral: true },
-    { label: 'Persistence', value: 'Local', change: 'Brand settings & export history', isNeutral: true },
+    { label: 'Persistence', value: 'Local', change: 'Project-scoped drafts & decks', isNeutral: true },
   ];
 
   // Helper icons for the aesthetic representation of the miniature design structure
@@ -171,18 +181,28 @@ export default function Dashboard({ onSelectTemplate, onViewSlides, exportCount 
           <h1 className="text-3xl font-bold font-['Space_Grotesk'] tracking-tight text-white">
             {greeting}, Olaoluwa
           </h1>
-          <p className="text-neutral-400 text-sm max-w-md">
-            Welcome back to Brand Studio. Build, edit, and orchestrate high-fidelity corporate brand assets on demand.
+          <p className="text-neutral-400 text-sm max-w-xl">
+            {activeProjectName
+              ? <>Working in <strong className="text-neutral-200">{activeProjectName}</strong>. Drafts, decks, and exports are isolated to this project.</>
+              : <>No project is open yet. Create or open a project before entering the production tools.</>}
           </p>
         </div>
 
-        <button 
-          onClick={() => onSelectTemplate('enterprise-philosophy', false)}
-          className="mt-6 md:mt-0 flex items-center gap-2 bg-[#C7A248] hover:bg-[#b08e3d] text-[#0A0A0A] px-5 py-3 rounded-lg text-xs font-bold transition-all duration-300 hover:shadow-[0_0_20px_rgba(199,162,72,0.3)] shadow-lg"
-        >
-          <span>Launch Design Engine</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="mt-6 md:mt-0 flex flex-wrap gap-2">
+          <button
+            onClick={onViewProjects}
+            className="flex items-center gap-2 bg-neutral-950 hover:bg-black border border-neutral-800 hover:border-[#C7A248]/30 text-neutral-300 px-4 py-3 rounded-lg text-xs font-semibold transition-all"
+          >
+            <span>Manage Projects</span>
+          </button>
+          <button
+            onClick={() => onSelectTemplate('enterprise-philosophy', false)}
+            className="flex items-center gap-2 bg-[#C7A248] hover:bg-[#b08e3d] text-[#0A0A0A] px-5 py-3 rounded-lg text-xs font-bold transition-all duration-300 hover:shadow-[0_0_20px_rgba(199,162,72,0.3)] shadow-lg"
+          >
+            <span>{activeProjectName ? 'Launch Design Engine' : 'Choose a Project'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats Cards */}
