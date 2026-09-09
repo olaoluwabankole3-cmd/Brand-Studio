@@ -518,6 +518,7 @@ export default function Editor({
         onAddExport({
           id: Math.random().toString(36).substr(2, 9),
           timestamp: new Date().toISOString(),
+          brandSnapshot: { ...brandSettings },
           templateId,
           templateName: TEMPLATE_PRESETS.find(t => t.id === templateId)?.name || 'Template',
           headline,
