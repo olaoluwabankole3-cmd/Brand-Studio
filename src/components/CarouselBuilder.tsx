@@ -473,6 +473,7 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
       onAddExport({
         id: Math.random().toString(),
         timestamp: new Date().toISOString(),
+        brandSnapshot: { ...brandSettings },
         templateId: 'enterprise-philosophy',
         templateName: `Apex Slide ${activeSlideIndex + 1} (${slides[activeSlideIndex]?.layoutId})`,
         headline: slides[activeSlideIndex]?.headline || slides[activeSlideIndex]?.quoteText || 'Carousel Slide',
