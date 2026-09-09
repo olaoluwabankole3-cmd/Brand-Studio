@@ -15,9 +15,12 @@ The product currently includes:
 - Multi-format export workflows for PNG, JPEG, SVG, and PDF
 - Export history stored locally in the browser
 - Optional server-side content generation through Gemini, with local fallback content
-- Browser persistence for brand settings and export records
+- Browser persistence for brand settings, projects, drafts, decks, and export records
 - Multi-brand profile switching for separate company/client brand kits
-- Autosaved single-card drafts and persisted carousel workspace state
+- Brand-scoped project workspaces with create, open, edit, duplicate, archive, restore, and delete flows
+- Project-scoped single-card drafts and carousel decks
+- Project-aware export history with brand and project attribution
+- Autosaved working sessions with last-edited project tracking
 
 ## Why it exists
 
@@ -47,7 +50,36 @@ The goal is to reduce repetitive production work while preserving brand consiste
 - Structured JSON generation endpoint
 - Local generation fallback when no API key is configured
 
-## Core workspaces
+## Workspace hierarchy
+
+Brand Studio V2 organizes production using a simple ownership model:
+
+```text
+Brand
+└── Project
+    ├── Campaign / Series context
+    ├── Single-card draft
+    ├── Carousel deck
+    └── Exported assets
+```
+
+Each brand can contain multiple projects. Opening a project restores that project's working state, and duplicating a project copies its draft/deck workspace without mixing export history.
+
+### Projects
+
+The Projects workspace supports:
+
+- Creating and naming production workspaces
+- Campaign / series metadata
+- Project briefs
+- Opening and resuming prior work
+- Last-edited activity tracking
+- Duplicating project draft/deck state
+- Archiving and restoring projects
+- Deleting project working state with confirmation
+- Project-level export counts
+
+## Core production workspaces
 
 ### Brand Studio
 
@@ -83,7 +115,7 @@ The layout system is designed to make long-form campaigns visually coherent with
 
 The current version is local-first.
 
-Brand settings and export history are stored in browser localStorage. No cloud account or multi-user synchronization is required for the current implementation.
+Brand profiles, project records, active-project selection, editor drafts, carousel decks, workspace settings, and export history are stored in browser localStorage. Project draft/deck keys are isolated by project ID so switching projects does not overwrite another workspace. No cloud account or multi-user synchronization is required for the current implementation.
 
 Cloud workspaces, collaboration, permissions, and remote project storage are planned product extensions rather than current capabilities.
 
@@ -124,15 +156,19 @@ Brand Studio is being developed around five principles:
 
 The next product iteration focuses on:
 
-- Project-level recovery and version history
+- Project version history and restore points
 - Better empty-state onboarding and first-run guidance
-- Project-scoped workspaces that isolate drafts and decks by brand
-- Project/deck naming and project history
-- Import/export of workspace data
+- Import/export of complete workspace data
 - Cloud synchronization and team collaboration
+- Role-based permissions
 - Publishing calendar integrations
 - Motion exports
 - Accessibility and keyboard workflows
+- Automated tests and broader CI coverage
+
+## Build verification
+
+A GitHub Actions workflow is included to run the TypeScript check and production build on V2 pushes and pull requests. If repository Actions are disabled, those checks will not execute until Actions are enabled.
 
 ## Repository status
 
