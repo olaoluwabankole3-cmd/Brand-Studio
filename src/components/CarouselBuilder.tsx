@@ -36,6 +36,7 @@ interface CarouselBuilderProps {
   brandSettings: BrandSettings;
   projectId: string;
   projectName: string;
+  onProjectActivity: () => void;
   onAddExport: (item: ExportHistoryItem) => void;
 }
 
@@ -117,7 +118,13 @@ interface SlideData {
   microTagRight: string;
 }
 
-export default function CarouselBuilder({ brandSettings, projectId, projectName, onAddExport }: CarouselBuilderProps) {
+export default function CarouselBuilder({
+  brandSettings,
+  projectId,
+  projectName,
+  onProjectActivity,
+  onAddExport
+}: CarouselBuilderProps) {
   // Global slide system state
   const [activePillar, setActivePillar] = useState<string>('philosophy');
   const [dayCounter, setDayCounter] = useState<string>('DAY 01');
@@ -389,10 +396,11 @@ export default function CarouselBuilder({ brandSettings, projectId, projectName,
         footerWebsite,
         activeSlideIndex
       }));
+      onProjectActivity();
     } catch (e) {
       console.error('Failed to cache carousel workspace:', e);
     }
-  }, [projectId, footerOwner, footerProduction, footerMonth, footerWebsite, activeSlideIndex]);
+  }, [projectId, footerOwner, footerProduction, footerMonth, footerWebsite, activeSlideIndex, onProjectActivity]);
 
   // Save changes to localStorage on slide updates
   const persistState = (currentSlides: SlideData[], pillar: string, day: string, episode: string, series: string) => {
@@ -402,6 +410,7 @@ export default function CarouselBuilder({ brandSettings, projectId, projectName,
       localStorage.setItem(storageKeys.day, day);
       localStorage.setItem(storageKeys.episode, episode);
       localStorage.setItem(storageKeys.series, series);
+      onProjectActivity();
     } catch (e) {
       console.error("Failed to cache slides:", e);
     }
