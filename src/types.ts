@@ -75,6 +75,7 @@ export interface StudioProject {
 export interface ExportHistoryItem {
   id: string;
   timestamp: string;
+  brandId?: string;
   brandSnapshot?: BrandSettings;
   projectId?: string;
   projectName?: string;
