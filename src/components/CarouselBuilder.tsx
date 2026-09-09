@@ -334,18 +334,26 @@ export default function CarouselBuilder({
   // Populate default 7-slide carousel flow on initial load
   useEffect(() => {
     try {
+      const allowLegacyMigration = projectId === 'apex-enterprise-intelligence';
+
       const cachedSlides =
-        localStorage.getItem(storageKeys.slides) || localStorage.getItem('apex_carousel_slides_v1');
+        localStorage.getItem(storageKeys.slides) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_slides_v1') : null);
       const cachedPillar =
-        localStorage.getItem(storageKeys.pillar) || localStorage.getItem('apex_carousel_pillar_v1');
+        localStorage.getItem(storageKeys.pillar) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_pillar_v1') : null);
       const cachedDay =
-        localStorage.getItem(storageKeys.day) || localStorage.getItem('apex_carousel_day_v1');
+        localStorage.getItem(storageKeys.day) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_day_v1') : null);
       const cachedEpisode =
-        localStorage.getItem(storageKeys.episode) || localStorage.getItem('apex_carousel_episode_v1');
+        localStorage.getItem(storageKeys.episode) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_episode_v1') : null);
       const cachedSeries =
-        localStorage.getItem(storageKeys.series) || localStorage.getItem('apex_carousel_series_v1');
+        localStorage.getItem(storageKeys.series) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_series_v1') : null);
       const cachedWorkspace =
-        localStorage.getItem(storageKeys.workspace) || localStorage.getItem('apex_carousel_workspace_v2');
+        localStorage.getItem(storageKeys.workspace) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_workspace_v2') : null);
 
       if (cachedPillar) setActivePillar(cachedPillar);
       if (cachedDay) setDayCounter(cachedDay);
