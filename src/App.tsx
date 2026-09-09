@@ -282,18 +282,26 @@ export default function App() {
       }
     });
 
+    const deletedProjectIds = new Set(brandProjectsToDelete.map(project => project.id));
     const updatedProfiles = brandProfiles.filter(profile => profile.id !== activeBrandId);
     const updatedProjects = projects.filter(project => project.brandId !== activeBrandId);
+    const updatedExports = exportsList.filter(item =>
+      item.brandId
+        ? item.brandId !== activeBrandId
+        : !item.projectId || !deletedProjectIds.has(item.projectId)
+    );
     const nextActiveId = updatedProfiles[0].id;
     const nextActiveMap = { ...activeProjectByBrand };
     delete nextActiveMap[activeBrandId];
 
     setBrandProfiles(updatedProfiles);
     setProjects(updatedProjects);
+    setExportsList(updatedExports);
     setActiveBrandId(nextActiveId);
     setActiveProjectByBrand(nextActiveMap);
     persistBrandProfiles(updatedProfiles, nextActiveId);
     persistProjects(updatedProjects, nextActiveMap);
+    localStorage.setItem('apex_sync_exports_v1', JSON.stringify(updatedExports));
 
     const nextProjectId = nextActiveMap[nextActiveId];
     const hasOpenProject = updatedProjects.some(
@@ -547,7 +555,7 @@ export default function App() {
           <Dashboard
             onSelectTemplate={handleSelectTemplate}
             onViewSlides={() => handleNavigation('slides')}
-            exportCount={(exportsList || []).filter(item => !activeProjectId || item.projectId === activeProjectId).length}
+            exportCount={activeProjectId ? (exportsList || []).filter(item => item.projectId === activeProjectId).length : 0}
             activeProjectName={activeProject?.name || null}
             projectCount={activeBrandProjects.filter(project => project.status === 'active').length}
             onViewProjects={() => setActiveTab('projects')}
@@ -560,6 +568,7 @@ export default function App() {
             initialTemplateId={selectedTemplateId}
             autoGenerateOnLoad={autoGenerateTrigger}
             brandSettings={brandSettings}
+            brandId={activeBrandId}
             projectId={activeProject!.id}
             projectName={activeProject!.name}
             projectCampaignName={activeProject!.campaignName}
@@ -572,6 +581,7 @@ export default function App() {
           <CarouselBuilder
             key={activeProjectId || 'no-project'}
             brandSettings={brandSettings}
+            brandId={activeBrandId}
             projectId={activeProject!.id}
             projectName={activeProject!.name}
             projectCampaignName={activeProject!.campaignName}
@@ -645,7 +655,7 @@ export default function App() {
       case 'exports':
         return (
           <ExportHistory
-            exportsList={exportsList}
+            exportsList={exportsList.filter(item => !item.brandId || item.brandId === activeBrandId)}
             onClearHistory={handleClearHistory}
             brandSettings={brandSettings}
             activeProjectId={activeProjectId}
