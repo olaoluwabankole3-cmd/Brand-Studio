@@ -34,6 +34,8 @@ import { BrandSettings, ExportHistoryItem } from '../types';
 
 interface CarouselBuilderProps {
   brandSettings: BrandSettings;
+  projectId: string;
+  projectName: string;
   onAddExport: (item: ExportHistoryItem) => void;
 }
 
@@ -115,7 +117,7 @@ interface SlideData {
   microTagRight: string;
 }
 
-export default function CarouselBuilder({ brandSettings, onAddExport }: CarouselBuilderProps) {
+export default function CarouselBuilder({ brandSettings, projectId, projectName, onAddExport }: CarouselBuilderProps) {
   // Global slide system state
   const [activePillar, setActivePillar] = useState<string>('philosophy');
   const [dayCounter, setDayCounter] = useState<string>('DAY 01');
@@ -145,6 +147,15 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const storageKeys = {
+    slides: `apex_sync_project_${projectId}_carousel_slides_v1`,
+    pillar: `apex_sync_project_${projectId}_carousel_pillar_v1`,
+    day: `apex_sync_project_${projectId}_carousel_day_v1`,
+    episode: `apex_sync_project_${projectId}_carousel_episode_v1`,
+    series: `apex_sync_project_${projectId}_carousel_series_v1`,
+    workspace: `apex_sync_project_${projectId}_carousel_workspace_v1`
+  };
 
   // Default slide initializer
   const createDefaultSlide = (layoutId: string, index: number): SlideData => {
@@ -316,12 +327,18 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
   // Populate default 7-slide carousel flow on initial load
   useEffect(() => {
     try {
-      const cachedSlides = localStorage.getItem('apex_carousel_slides_v1');
-      const cachedPillar = localStorage.getItem('apex_carousel_pillar_v1');
-      const cachedDay = localStorage.getItem('apex_carousel_day_v1');
-      const cachedEpisode = localStorage.getItem('apex_carousel_episode_v1');
-      const cachedSeries = localStorage.getItem('apex_carousel_series_v1');
-      const cachedWorkspace = localStorage.getItem('apex_carousel_workspace_v2');
+      const cachedSlides =
+        localStorage.getItem(storageKeys.slides) || localStorage.getItem('apex_carousel_slides_v1');
+      const cachedPillar =
+        localStorage.getItem(storageKeys.pillar) || localStorage.getItem('apex_carousel_pillar_v1');
+      const cachedDay =
+        localStorage.getItem(storageKeys.day) || localStorage.getItem('apex_carousel_day_v1');
+      const cachedEpisode =
+        localStorage.getItem(storageKeys.episode) || localStorage.getItem('apex_carousel_episode_v1');
+      const cachedSeries =
+        localStorage.getItem(storageKeys.series) || localStorage.getItem('apex_carousel_series_v1');
+      const cachedWorkspace =
+        localStorage.getItem(storageKeys.workspace) || localStorage.getItem('apex_carousel_workspace_v2');
 
       if (cachedPillar) setActivePillar(cachedPillar);
       if (cachedDay) setDayCounter(cachedDay);
@@ -360,12 +377,12 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
       { ...createDefaultSlide('L08', 6), quoteText: "How much of your day is spent performing actions that can be written down as a formal state machine?" }
     ];
     setSlides(initialDeck);
-  }, []);
+  }, [projectId]);
 
   // Persist workspace-level settings separately from the deck content.
   useEffect(() => {
     try {
-      localStorage.setItem('apex_carousel_workspace_v2', JSON.stringify({
+      localStorage.setItem(storageKeys.workspace, JSON.stringify({
         footerOwner,
         footerProduction,
         footerMonth,
@@ -375,16 +392,16 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
     } catch (e) {
       console.error('Failed to cache carousel workspace:', e);
     }
-  }, [footerOwner, footerProduction, footerMonth, footerWebsite, activeSlideIndex]);
+  }, [projectId, footerOwner, footerProduction, footerMonth, footerWebsite, activeSlideIndex]);
 
   // Save changes to localStorage on slide updates
   const persistState = (currentSlides: SlideData[], pillar: string, day: string, episode: string, series: string) => {
     try {
-      localStorage.setItem('apex_carousel_slides_v1', JSON.stringify(currentSlides));
-      localStorage.setItem('apex_carousel_pillar_v1', pillar);
-      localStorage.setItem('apex_carousel_day_v1', day);
-      localStorage.setItem('apex_carousel_episode_v1', episode);
-      localStorage.setItem('apex_carousel_series_v1', series);
+      localStorage.setItem(storageKeys.slides, JSON.stringify(currentSlides));
+      localStorage.setItem(storageKeys.pillar, pillar);
+      localStorage.setItem(storageKeys.day, day);
+      localStorage.setItem(storageKeys.episode, episode);
+      localStorage.setItem(storageKeys.series, series);
     } catch (e) {
       console.error("Failed to cache slides:", e);
     }
@@ -474,6 +491,8 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
         id: Math.random().toString(),
         timestamp: new Date().toISOString(),
         brandSnapshot: { ...brandSettings },
+        projectId,
+        projectName,
         templateId: 'enterprise-philosophy',
         templateName: `Apex Slide ${activeSlideIndex + 1} (${slides[activeSlideIndex]?.layoutId})`,
         headline: slides[activeSlideIndex]?.headline || slides[activeSlideIndex]?.quoteText || 'Carousel Slide',
@@ -533,7 +552,10 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
 
       onAddExport({
         id: Math.random().toString(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        timestamp: new Date().toISOString(),
+        brandSnapshot: { ...brandSettings },
+        projectId,
+        projectName,
         templateId: 'enterprise-philosophy',
         templateName: `Master Carousel (${slides.length} slides)`,
         headline: seriesName,
