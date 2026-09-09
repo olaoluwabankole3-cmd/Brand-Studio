@@ -22,8 +22,18 @@ import BrandAssets from './components/BrandAssets';
 import ExportHistory from './components/ExportHistory';
 import Settings from './components/Settings';
 
-import { TemplateId, BrandSettings, ExportHistoryItem } from './types';
+import { TemplateId, BrandSettings, BrandProfile, ExportHistoryItem } from './types';
 import { DEFAULT_BRAND_SETTINGS, TEMPLATE_PRESETS } from './data';
+
+const DEFAULT_PROFILE_ID = 'apex-sync';
+
+const createDefaultBrandProfile = (): BrandProfile => ({
+  id: DEFAULT_PROFILE_ID,
+  name: 'Apex Sync',
+  settings: { ...DEFAULT_BRAND_SETTINGS },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
+});
 
 export default function App() {
   // Navigation Routing Tab state
@@ -34,26 +44,50 @@ export default function App() {
   const [autoGenerateTrigger, setAutoGenerateTrigger] = useState<boolean>(false);
 
   // Persistent User State
-  const [brandSettings, setBrandSettings] = useState<BrandSettings>(DEFAULT_BRAND_SETTINGS);
+  const [brandProfiles, setBrandProfiles] = useState<BrandProfile[]>([createDefaultBrandProfile()]);
+  const [activeBrandId, setActiveBrandId] = useState<string>(DEFAULT_PROFILE_ID);
   const [exportsList, setExportsList] = useState<ExportHistoryItem[]>([]);
+
+  const activeBrandProfile =
+    brandProfiles.find(profile => profile.id === activeBrandId) || brandProfiles[0];
+  const brandSettings: BrandSettings = activeBrandProfile?.settings || DEFAULT_BRAND_SETTINGS;
 
   // Load state from browser cache on initial boot
   useEffect(() => {
     try {
-      const cachedBrand = localStorage.getItem('apex_sync_brand_settings_v1');
-      if (cachedBrand) {
-        const parsed = JSON.parse(cachedBrand);
-        if (parsed && typeof parsed === 'object') {
-          const merged = { ...DEFAULT_BRAND_SETTINGS, ...parsed };
-          // Auto-migrate if logoUrl is empty or not set in cache to show the original brand logo
-          if (!parsed.logoUrl || parsed.logoUrl === '') {
-            merged.logoUrl = DEFAULT_BRAND_SETTINGS.logoUrl;
+      const cachedProfiles = localStorage.getItem('apex_sync_brand_profiles_v2');
+      const cachedActiveBrandId = localStorage.getItem('apex_sync_active_brand_v2');
+
+      if (cachedProfiles) {
+        const parsedProfiles = JSON.parse(cachedProfiles);
+        if (Array.isArray(parsedProfiles) && parsedProfiles.length > 0) {
+          setBrandProfiles(parsedProfiles);
+          const requestedActiveId = cachedActiveBrandId || parsedProfiles[0].id;
+          const validActiveId = parsedProfiles.some((profile: BrandProfile) => profile.id === requestedActiveId)
+            ? requestedActiveId
+            : parsedProfiles[0].id;
+          setActiveBrandId(validActiveId);
+        }
+      } else {
+        // Migrate the original single-brand cache into the V2 workspace model.
+        const cachedBrand = localStorage.getItem('apex_sync_brand_settings_v1');
+        if (cachedBrand) {
+          const parsed = JSON.parse(cachedBrand);
+          if (parsed && typeof parsed === 'object') {
+            const migratedProfile: BrandProfile = {
+              ...createDefaultBrandProfile(),
+              settings: { ...DEFAULT_BRAND_SETTINGS, ...parsed },
+              updatedAt: new Date().toISOString()
+            };
+            setBrandProfiles([migratedProfile]);
+            setActiveBrandId(migratedProfile.id);
+            localStorage.setItem('apex_sync_brand_profiles_v2', JSON.stringify([migratedProfile]));
+            localStorage.setItem('apex_sync_active_brand_v2', migratedProfile.id);
           }
-          setBrandSettings(merged);
         }
       }
     } catch (err) {
-      console.error('Error hydrating brand settings from cache:', err);
+      console.error('Error hydrating brand workspaces from cache:', err);
     }
 
     try {
@@ -71,14 +105,70 @@ export default function App() {
     }
   }, []);
 
-  // Save brand parameters on changes
-  const handleUpdateBrandSettings = (newSettings: BrandSettings) => {
-    setBrandSettings(newSettings);
+  const persistBrandProfiles = (profiles: BrandProfile[], selectedBrandId: string) => {
     try {
-      localStorage.setItem('apex_sync_brand_settings_v1', JSON.stringify(newSettings));
+      localStorage.setItem('apex_sync_brand_profiles_v2', JSON.stringify(profiles));
+      localStorage.setItem('apex_sync_active_brand_v2', selectedBrandId);
     } catch (err) {
-      console.error('Failed to commit brand settings:', err);
+      console.error('Failed to commit brand workspaces:', err);
     }
+  };
+
+  // Save brand parameters inside the currently selected workspace.
+  const handleUpdateBrandSettings = (newSettings: BrandSettings) => {
+    const now = new Date().toISOString();
+    const updatedProfiles = brandProfiles.map(profile =>
+      profile.id === activeBrandId
+        ? { ...profile, settings: newSettings, updatedAt: now }
+        : profile
+    );
+    setBrandProfiles(updatedProfiles);
+    persistBrandProfiles(updatedProfiles, activeBrandId);
+  };
+
+  const handleSelectBrand = (brandId: string) => {
+    if (!brandProfiles.some(profile => profile.id === brandId)) return;
+    setActiveBrandId(brandId);
+    persistBrandProfiles(brandProfiles, brandId);
+  };
+
+  const handleCreateBrand = () => {
+    const now = new Date().toISOString();
+    const newProfile: BrandProfile = {
+      id: `brand-${Date.now().toString(36)}`,
+      name: `Brand ${brandProfiles.length + 1}`,
+      settings: { ...brandSettings },
+      createdAt: now,
+      updatedAt: now
+    };
+
+    const updatedProfiles = [...brandProfiles, newProfile];
+    setBrandProfiles(updatedProfiles);
+    setActiveBrandId(newProfile.id);
+    persistBrandProfiles(updatedProfiles, newProfile.id);
+  };
+
+  const handleRenameActiveBrand = (name: string) => {
+    const cleanName = name.trim();
+    if (!cleanName) return;
+
+    const updatedProfiles = brandProfiles.map(profile =>
+      profile.id === activeBrandId
+        ? { ...profile, name: cleanName, updatedAt: new Date().toISOString() }
+        : profile
+    );
+    setBrandProfiles(updatedProfiles);
+    persistBrandProfiles(updatedProfiles, activeBrandId);
+  };
+
+  const handleDeleteActiveBrand = () => {
+    if (brandProfiles.length <= 1) return;
+
+    const updatedProfiles = brandProfiles.filter(profile => profile.id !== activeBrandId);
+    const nextActiveId = updatedProfiles[0].id;
+    setBrandProfiles(updatedProfiles);
+    setActiveBrandId(nextActiveId);
+    persistBrandProfiles(updatedProfiles, nextActiveId);
   };
 
   // Log a new export transaction
@@ -104,10 +194,14 @@ export default function App() {
 
   // Reset entire application back to defaults
   const handleResetApp = () => {
-    setBrandSettings(DEFAULT_BRAND_SETTINGS);
+    const defaultProfile = createDefaultBrandProfile();
+    setBrandProfiles([defaultProfile]);
+    setActiveBrandId(defaultProfile.id);
     setExportsList([]);
     try {
       localStorage.removeItem('apex_sync_brand_settings_v1');
+      localStorage.removeItem('apex_sync_brand_profiles_v2');
+      localStorage.removeItem('apex_sync_active_brand_v2');
       localStorage.removeItem('apex_sync_exports_v1');
       localStorage.removeItem('apex_sync_editor_draft_v2');
       localStorage.removeItem('apex_carousel_slides_v1');
@@ -195,8 +289,14 @@ export default function App() {
         );
       case 'assets':
         return (
-          <BrandAssets 
-            brandSettings={brandSettings} 
+          <BrandAssets
+            brandSettings={brandSettings}
+            brandProfiles={brandProfiles}
+            activeBrandId={activeBrandId}
+            onSelectBrand={handleSelectBrand}
+            onCreateBrand={handleCreateBrand}
+            onRenameActiveBrand={handleRenameActiveBrand}
+            onDeleteActiveBrand={handleDeleteActiveBrand}
             onUpdateBrandSettings={handleUpdateBrandSettings}
           />
         );
@@ -254,10 +354,10 @@ export default function App() {
             {/* Profile */}
             <div className="flex items-center gap-2 border-l border-neutral-800 pl-4">
               <span className="text-xs text-neutral-400 font-medium hidden sm:inline">
-                Olaoluwa
+                {activeBrandProfile?.name || 'Workspace'}
               </span>
               <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#C7A248] to-[#927129] flex items-center justify-center font-bold text-black text-xs">
-                O
+                {(activeBrandProfile?.name || 'W').charAt(0).toUpperCase()}
               </div>
             </div>
 
