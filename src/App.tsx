@@ -116,14 +116,16 @@ export default function App() {
 
   // Save brand parameters inside the currently selected workspace.
   const handleUpdateBrandSettings = (newSettings: BrandSettings) => {
-    const now = new Date().toISOString();
-    const updatedProfiles = brandProfiles.map(profile =>
-      profile.id === activeBrandId
-        ? { ...profile, settings: newSettings, updatedAt: now }
-        : profile
-    );
-    setBrandProfiles(updatedProfiles);
-    persistBrandProfiles(updatedProfiles, activeBrandId);
+    setBrandProfiles(currentProfiles => {
+      const now = new Date().toISOString();
+      const updatedProfiles = currentProfiles.map(profile =>
+        profile.id === activeBrandId
+          ? { ...profile, settings: newSettings, updatedAt: now }
+          : profile
+      );
+      persistBrandProfiles(updatedProfiles, activeBrandId);
+      return updatedProfiles;
+    });
   };
 
   const handleSelectBrand = (brandId: string) => {
@@ -133,42 +135,51 @@ export default function App() {
   };
 
   const handleCreateBrand = () => {
-    const now = new Date().toISOString();
-    const newProfile: BrandProfile = {
-      id: `brand-${Date.now().toString(36)}`,
-      name: `Brand ${brandProfiles.length + 1}`,
-      settings: { ...brandSettings },
-      createdAt: now,
-      updatedAt: now
-    };
+    setBrandProfiles(currentProfiles => {
+      const now = new Date().toISOString();
+      const currentActiveProfile =
+        currentProfiles.find(profile => profile.id === activeBrandId) || currentProfiles[0];
 
-    const updatedProfiles = [...brandProfiles, newProfile];
-    setBrandProfiles(updatedProfiles);
-    setActiveBrandId(newProfile.id);
-    persistBrandProfiles(updatedProfiles, newProfile.id);
+      const newProfile: BrandProfile = {
+        id: `brand-${Date.now().toString(36)}`,
+        name: `Brand ${currentProfiles.length + 1}`,
+        settings: { ...(currentActiveProfile?.settings || DEFAULT_BRAND_SETTINGS) },
+        createdAt: now,
+        updatedAt: now
+      };
+
+      const updatedProfiles = [...currentProfiles, newProfile];
+      setActiveBrandId(newProfile.id);
+      persistBrandProfiles(updatedProfiles, newProfile.id);
+      return updatedProfiles;
+    });
   };
 
   const handleRenameActiveBrand = (name: string) => {
     const cleanName = name.trim();
     if (!cleanName) return;
 
-    const updatedProfiles = brandProfiles.map(profile =>
-      profile.id === activeBrandId
-        ? { ...profile, name: cleanName, updatedAt: new Date().toISOString() }
-        : profile
-    );
-    setBrandProfiles(updatedProfiles);
-    persistBrandProfiles(updatedProfiles, activeBrandId);
+    setBrandProfiles(currentProfiles => {
+      const updatedProfiles = currentProfiles.map(profile =>
+        profile.id === activeBrandId
+          ? { ...profile, name: cleanName, updatedAt: new Date().toISOString() }
+          : profile
+      );
+      persistBrandProfiles(updatedProfiles, activeBrandId);
+      return updatedProfiles;
+    });
   };
 
   const handleDeleteActiveBrand = () => {
-    if (brandProfiles.length <= 1) return;
+    setBrandProfiles(currentProfiles => {
+      if (currentProfiles.length <= 1) return currentProfiles;
 
-    const updatedProfiles = brandProfiles.filter(profile => profile.id !== activeBrandId);
-    const nextActiveId = updatedProfiles[0].id;
-    setBrandProfiles(updatedProfiles);
-    setActiveBrandId(nextActiveId);
-    persistBrandProfiles(updatedProfiles, nextActiveId);
+      const updatedProfiles = currentProfiles.filter(profile => profile.id !== activeBrandId);
+      const nextActiveId = updatedProfiles[0].id;
+      setActiveBrandId(nextActiveId);
+      persistBrandProfiles(updatedProfiles, nextActiveId);
+      return updatedProfiles;
+    });
   };
 
   // Log a new export transaction
