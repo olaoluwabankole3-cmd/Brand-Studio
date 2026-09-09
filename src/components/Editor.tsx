@@ -191,7 +191,10 @@ export default function Editor({
   useEffect(() => {
     try {
       const scopedDraft = localStorage.getItem(editorStorageKey);
-      const legacyDraft = localStorage.getItem('apex_sync_editor_draft_v2');
+      const legacyDraft =
+        projectId === 'apex-enterprise-intelligence'
+          ? localStorage.getItem('apex_sync_editor_draft_v2')
+          : null;
       const cachedDraft = scopedDraft || legacyDraft;
 
       if (cachedDraft) {
