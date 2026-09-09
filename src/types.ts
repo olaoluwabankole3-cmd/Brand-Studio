@@ -49,6 +49,14 @@ export interface BrandSettings {
   email: string;
 }
 
+export interface BrandProfile {
+  id: string;
+  name: string;
+  settings: BrandSettings;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ExportHistoryItem {
   id: string;
   timestamp: string;
