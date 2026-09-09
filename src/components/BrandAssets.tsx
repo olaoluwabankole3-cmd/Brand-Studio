@@ -107,8 +107,8 @@ export default function BrandAssets({
               <Layers3 className="w-4 h-4 text-[#C7A248]" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Brand Workspace</p>
-              <p className="text-[10px] text-neutral-500">Switch between separate client or company brand kits.</p>
+              <p className="text-sm font-semibold text-white">Brand Profile</p>
+              <p className="text-[10px] text-neutral-500">Switch between separate client or company brand kits without overwriting another identity.</p>
             </div>
           </div>
 
@@ -135,7 +135,7 @@ export default function BrandAssets({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Active Workspace</label>
+            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Active Brand</label>
             <select
               value={activeBrandId}
               onChange={(e) => onSelectBrand(e.target.value)}
@@ -148,7 +148,7 @@ export default function BrandAssets({
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Workspace Name</label>
+            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Brand Name</label>
             <input
               type="text"
               value={profileName}
