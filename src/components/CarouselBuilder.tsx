@@ -34,6 +34,7 @@ import { BrandSettings, ExportHistoryItem } from '../types';
 
 interface CarouselBuilderProps {
   brandSettings: BrandSettings;
+  brandId: string;
   projectId: string;
   projectName: string;
   projectCampaignName: string;
@@ -121,6 +122,7 @@ interface SlideData {
 
 export default function CarouselBuilder({
   brandSettings,
+  brandId,
   projectId,
   projectName,
   projectCampaignName,
@@ -509,6 +511,7 @@ export default function CarouselBuilder({
       onAddExport({
         id: Math.random().toString(),
         timestamp: new Date().toISOString(),
+        brandId,
         brandSnapshot: { ...brandSettings },
         projectId,
         projectName,
@@ -572,6 +575,7 @@ export default function CarouselBuilder({
       onAddExport({
         id: Math.random().toString(),
         timestamp: new Date().toISOString(),
+        brandId,
         brandSnapshot: { ...brandSettings },
         projectId,
         projectName,
