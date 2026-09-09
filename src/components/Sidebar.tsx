@@ -5,7 +5,8 @@
 
 import { motion } from 'motion/react';
 import { 
-  LayoutDashboard, 
+  LayoutDashboard,
+  FolderKanban,
   Palette, 
   Copy, 
   FolderGit2, 
@@ -29,6 +30,7 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const primaryNavigation = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+    { id: 'projects', name: 'Projects', icon: FolderKanban },
     { id: 'slides', name: 'Slide System', icon: Presentation },
     { id: 'studio', name: 'Brand Studio', icon: Palette },
     { id: 'templates', name: 'Templates', icon: Copy },
@@ -132,11 +134,11 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       {/* Footer Info Block */}
       <div className="p-4 border-t border-[#1F1F1F] bg-[#0A0A0A] flex flex-col gap-1 text-[11px] text-neutral-500">
         <div className="flex justify-between items-center">
-          <span className="font-medium text-neutral-400">Version 1.0</span>
+          <span className="font-medium text-neutral-400">Version 2.0</span>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         </div>
         <p className="text-[10px] leading-tight text-neutral-600">
-          The Intelligent Design System for Enterprise Content.
+          Structured content production for brands, projects, and campaigns.
         </p>
       </div>
     </aside>
