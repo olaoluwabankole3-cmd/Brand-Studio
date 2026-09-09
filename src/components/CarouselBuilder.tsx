@@ -123,9 +123,14 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
   const [seriesName, setSeriesName] = useState<string>('Enterprise Intelligence');
   
   // Footer settings
+  const currentMonthLabel = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+
   const [footerOwner, setFooterOwner] = useState<string>('Apex Sync');
   const [footerProduction, setFooterProduction] = useState<string>('Enterprise Intelligence Series');
-  const [footerMonth, setFooterMonth] = useState<string>('August 2026');
+  const [footerMonth, setFooterMonth] = useState<string>(currentMonthLabel);
   const [footerWebsite, setFooterWebsite] = useState<string>('apexsync.io');
 
   // List of slides in the carousel deck
@@ -442,7 +447,7 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
       // Log export action in App context
       onAddExport({
         id: Math.random().toString(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        timestamp: new Date().toISOString(),
         templateId: 'enterprise-philosophy',
         templateName: `Apex Slide ${activeSlideIndex + 1} (${slides[activeSlideIndex]?.layoutId})`,
         headline: slides[activeSlideIndex]?.headline || slides[activeSlideIndex]?.quoteText || 'Carousel Slide',
