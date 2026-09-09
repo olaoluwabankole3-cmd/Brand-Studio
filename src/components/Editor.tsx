@@ -41,6 +41,7 @@ interface EditorProps {
   brandSettings: BrandSettings;
   projectId: string;
   projectName: string;
+  projectCampaignName: string;
   onProjectActivity: () => void;
   onAddExport: (item: ExportHistoryItem) => void;
 }
@@ -51,12 +52,13 @@ export default function Editor({
   brandSettings,
   projectId,
   projectName,
+  projectCampaignName,
   onProjectActivity,
   onAddExport
 }: EditorProps) {
   // Canvas settings state
   const [templateId, setTemplateId] = useState<TemplateId>(initialTemplateId);
-  const [series, setSeries] = useState(SERIES_OPTIONS[0]);
+  const [series, setSeries] = useState(projectCampaignName || SERIES_OPTIONS[0]);
   const [episode, setEpisode] = useState(EPISODE_OPTIONS[0]);
   const [day, setDay] = useState(DAY_OPTIONS[0]);
   const [headline, setHeadline] = useState('');
