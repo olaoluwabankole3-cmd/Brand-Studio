@@ -35,7 +35,7 @@ interface ExportHistoryProps {
 }
 
 function DesignThumbnail({ item, brandSettings }: { item: ExportHistoryItem, brandSettings?: BrandSettings }) {
-  const brand = brandSettings || DEFAULT_BRAND_SETTINGS;
+  const brand = item.brandSnapshot || brandSettings || DEFAULT_BRAND_SETTINGS;
   
   // Resolve fields with fallbacks
   const templateId = item.templateId;
@@ -632,7 +632,7 @@ export default function ExportHistory({ exportsList, onClearHistory, brandSettin
         format: 'a4'
       });
 
-      const brand = brandSettings || DEFAULT_BRAND_SETTINGS;
+      const brand = item.brandSnapshot || brandSettings || DEFAULT_BRAND_SETTINGS;
       
       // Hex to RGB parser for customized branding colors
       const hexToRgb = (hex: string) => {
