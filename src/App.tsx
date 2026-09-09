@@ -226,7 +226,7 @@ export default function App() {
           
           {/* Breadcrumb Info */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-neutral-500 font-mono tracking-wider uppercase">STUDIO CLOUD</span>
+            <span className="text-[11px] font-semibold text-neutral-500 font-mono tracking-wider uppercase">STUDIO WORKSPACE</span>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
             <span className="text-xs font-semibold text-neutral-300 capitalize font-['Space_Grotesk'] tracking-wide">
               {activeTab === 'studio' ? 'Design Engine' : activeTab.replace('-', ' ')}
@@ -236,11 +236,11 @@ export default function App() {
           {/* Connected state & Profile indicators */}
           <div className="flex items-center gap-6">
             
-            {/* Server sync status */}
+            {/* Workspace status */}
             <div className="flex items-center gap-2">
               <Database className="w-3.5 h-3.5 text-[#C7A248]" />
               <span className="text-[10px] font-mono font-semibold text-neutral-500 uppercase tracking-widest hidden md:inline">
-                GEMINI LINK OPERATIONAL
+                WORKSPACE READY
               </span>
             </div>
 
