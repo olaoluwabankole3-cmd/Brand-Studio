@@ -321,11 +321,21 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
       const cachedDay = localStorage.getItem('apex_carousel_day_v1');
       const cachedEpisode = localStorage.getItem('apex_carousel_episode_v1');
       const cachedSeries = localStorage.getItem('apex_carousel_series_v1');
+      const cachedWorkspace = localStorage.getItem('apex_carousel_workspace_v2');
 
       if (cachedPillar) setActivePillar(cachedPillar);
       if (cachedDay) setDayCounter(cachedDay);
       if (cachedEpisode) setEpisodeCounter(cachedEpisode);
       if (cachedSeries) setSeriesName(cachedSeries);
+
+      if (cachedWorkspace) {
+        const workspace = JSON.parse(cachedWorkspace);
+        if (typeof workspace.footerOwner === 'string') setFooterOwner(workspace.footerOwner);
+        if (typeof workspace.footerProduction === 'string') setFooterProduction(workspace.footerProduction);
+        if (typeof workspace.footerMonth === 'string') setFooterMonth(workspace.footerMonth);
+        if (typeof workspace.footerWebsite === 'string') setFooterWebsite(workspace.footerWebsite);
+        if (typeof workspace.activeSlideIndex === 'number') setActiveSlideIndex(Math.max(0, workspace.activeSlideIndex));
+      }
 
       if (cachedSlides) {
         const parsed = JSON.parse(cachedSlides);
@@ -351,6 +361,21 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
     ];
     setSlides(initialDeck);
   }, []);
+
+  // Persist workspace-level settings separately from the deck content.
+  useEffect(() => {
+    try {
+      localStorage.setItem('apex_carousel_workspace_v2', JSON.stringify({
+        footerOwner,
+        footerProduction,
+        footerMonth,
+        footerWebsite,
+        activeSlideIndex
+      }));
+    } catch (e) {
+      console.error('Failed to cache carousel workspace:', e);
+    }
+  }, [footerOwner, footerProduction, footerMonth, footerWebsite, activeSlideIndex]);
 
   // Save changes to localStorage on slide updates
   const persistState = (currentSlides: SlideData[], pillar: string, day: string, episode: string, series: string) => {
