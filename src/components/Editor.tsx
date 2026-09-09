@@ -56,9 +56,14 @@ export default function Editor({
   const [headline, setHeadline] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [quote, setQuote] = useState('');
+  const currentMonthLabel = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+
   const [footerLeft, setFooterLeft] = useState('Apex Sync');
   const [footerCenter, setFooterCenter] = useState('Enterprise Intelligence');
-  const [footerRight, setFooterRight] = useState('August 2026');
+  const [footerRight, setFooterRight] = useState(currentMonthLabel);
   const [backgroundId, setBackgroundId] = useState<BackgroundId>('matte-black');
   
   // Brand toggle states
@@ -371,7 +376,7 @@ export default function Editor({
         // Add to export logs
         onAddExport({
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toISOString(),
           templateId,
           templateName: TEMPLATE_PRESETS.find(t => t.id === templateId)?.name || 'Template',
           headline,
