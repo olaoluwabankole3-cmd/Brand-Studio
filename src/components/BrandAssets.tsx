@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { 
   FolderGit2, 
@@ -14,16 +14,36 @@ import {
   Globe, 
   Mail, 
   Share2,
-  FileText
+  FileText,
+  Plus,
+  Trash2,
+  Layers3
 } from 'lucide-react';
-import { BrandSettings } from '../types';
+import { BrandSettings, BrandProfile } from '../types';
 
 interface BrandAssetsProps {
   brandSettings: BrandSettings;
+  brandProfiles: BrandProfile[];
+  activeBrandId: string;
+  onSelectBrand: (brandId: string) => void;
+  onCreateBrand: () => void;
+  onRenameActiveBrand: (name: string) => void;
+  onDeleteActiveBrand: () => void;
   onUpdateBrandSettings: (settings: BrandSettings) => void;
 }
 
-export default function BrandAssets({ brandSettings, onUpdateBrandSettings }: BrandAssetsProps) {
+export default function BrandAssets({
+  brandSettings,
+  brandProfiles,
+  activeBrandId,
+  onSelectBrand,
+  onCreateBrand,
+  onRenameActiveBrand,
+  onDeleteActiveBrand,
+  onUpdateBrandSettings
+}: BrandAssetsProps) {
+  const activeProfile = brandProfiles.find(profile => profile.id === activeBrandId) || brandProfiles[0];
+  const [profileName, setProfileName] = useState(activeProfile?.name || 'Workspace');
   const [logoUrl, setLogoUrl] = useState(brandSettings.logoUrl);
   const [fontFamily, setFontFamily] = useState(brandSettings.fontFamily);
   const [primaryColor, setPrimaryColor] = useState(brandSettings.primaryColor);
@@ -35,8 +55,22 @@ export default function BrandAssets({ brandSettings, onUpdateBrandSettings }: Br
 
   const [isSaved, setIsSaved] = useState(false);
 
+  useEffect(() => {
+    const selectedProfile = brandProfiles.find(profile => profile.id === activeBrandId) || brandProfiles[0];
+    setProfileName(selectedProfile?.name || 'Workspace');
+    setLogoUrl(brandSettings.logoUrl);
+    setFontFamily(brandSettings.fontFamily);
+    setPrimaryColor(brandSettings.primaryColor);
+    setAccentColor(brandSettings.accentColor);
+    setWatermarkText(brandSettings.watermarkText);
+    setSocialHandle(brandSettings.socialHandle);
+    setWebsite(brandSettings.website);
+    setEmail(brandSettings.email);
+  }, [activeBrandId, brandSettings, brandProfiles]);
+
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
+    onRenameActiveBrand(profileName);
     onUpdateBrandSettings({
       logoUrl,
       fontFamily,
@@ -63,6 +97,67 @@ export default function BrandAssets({ brandSettings, onUpdateBrandSettings }: Br
         <p className="text-neutral-400 text-xs">
           Configure default corporate identity parameters. These settings are dynamically bound into the Template Engine layouts.
         </p>
+      </div>
+
+      {/* Workspace Switcher */}
+      <div className="bg-[#0E0E0E] border border-[#1F1F1F] rounded-2xl p-5 shadow-xl space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#C7A248]/10 border border-[#C7A248]/20 flex items-center justify-center">
+              <Layers3 className="w-4 h-4 text-[#C7A248]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Brand Profile</p>
+              <p className="text-[10px] text-neutral-500">Switch between separate client or company brand kits without overwriting another identity.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onCreateBrand}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#C7A248]/10 border border-[#C7A248]/30 text-[#C7A248] text-xs font-semibold hover:bg-[#C7A248]/20 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Brand
+            </button>
+            <button
+              type="button"
+              onClick={onDeleteActiveBrand}
+              disabled={brandProfiles.length <= 1}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-400 text-xs font-semibold hover:text-rose-400 hover:border-rose-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Active Brand</label>
+            <select
+              value={activeBrandId}
+              onChange={(e) => onSelectBrand(e.target.value)}
+              className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#C7A248]/50"
+            >
+              {brandProfiles.map(profile => (
+                <option key={profile.id} value={profile.id}>{profile.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Brand Name</label>
+            <input
+              type="text"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              placeholder="e.g. Apex Sync, Client A, Founder Brand"
+              className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#C7A248]/50"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Main Configurations Form */}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -21,9 +21,49 @@ import CarouselBuilder from './components/CarouselBuilder';
 import BrandAssets from './components/BrandAssets';
 import ExportHistory from './components/ExportHistory';
 import Settings from './components/Settings';
+import Projects from './components/Projects';
 
-import { TemplateId, BrandSettings, ExportHistoryItem } from './types';
+import { TemplateId, BrandSettings, BrandProfile, ExportHistoryItem, StudioProject } from './types';
 import { DEFAULT_BRAND_SETTINGS, TEMPLATE_PRESETS } from './data';
+
+const DEFAULT_PROFILE_ID = 'apex-sync';
+const DEFAULT_PROJECT_ID = 'apex-enterprise-intelligence';
+
+const PROJECT_STORAGE_SUFFIXES = [
+  'editor_v1',
+  'carousel_slides_v1',
+  'carousel_pillar_v1',
+  'carousel_day_v1',
+  'carousel_episode_v1',
+  'carousel_series_v1',
+  'carousel_workspace_v1'
+];
+
+const projectStorageKey = (projectId: string, suffix: string) =>
+  `apex_sync_project_${projectId}_${suffix}`;
+
+const createDefaultBrandProfile = (): BrandProfile => ({
+  id: DEFAULT_PROFILE_ID,
+  name: 'Apex Sync',
+  settings: { ...DEFAULT_BRAND_SETTINGS },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
+});
+
+const createDefaultProject = (): StudioProject => {
+  const now = new Date().toISOString();
+  return {
+    id: DEFAULT_PROJECT_ID,
+    brandId: DEFAULT_PROFILE_ID,
+    name: 'Enterprise Intelligence Series',
+    campaignName: 'Enterprise Intelligence',
+    description: 'Primary thought-leadership publishing workspace for Apex Sync.',
+    status: 'active',
+    createdAt: now,
+    updatedAt: now,
+    lastOpenedAt: now
+  };
+};
 
 export default function App() {
   // Navigation Routing Tab state
@@ -34,26 +74,87 @@ export default function App() {
   const [autoGenerateTrigger, setAutoGenerateTrigger] = useState<boolean>(false);
 
   // Persistent User State
-  const [brandSettings, setBrandSettings] = useState<BrandSettings>(DEFAULT_BRAND_SETTINGS);
+  const [brandProfiles, setBrandProfiles] = useState<BrandProfile[]>([createDefaultBrandProfile()]);
+  const [activeBrandId, setActiveBrandId] = useState<string>(DEFAULT_PROFILE_ID);
+  const [projects, setProjects] = useState<StudioProject[]>([createDefaultProject()]);
+  const [activeProjectByBrand, setActiveProjectByBrand] = useState<Record<string, string>>({
+    [DEFAULT_PROFILE_ID]: DEFAULT_PROJECT_ID
+  });
   const [exportsList, setExportsList] = useState<ExportHistoryItem[]>([]);
+
+  const activeBrandProfile =
+    brandProfiles.find(profile => profile.id === activeBrandId) || brandProfiles[0];
+  const brandSettings: BrandSettings = activeBrandProfile?.settings || DEFAULT_BRAND_SETTINGS;
+  const activeProjectId = activeProjectByBrand[activeBrandId] || null;
+  const activeProject =
+    projects.find(project => project.id === activeProjectId && project.brandId === activeBrandId) || null;
+  const activeBrandProjects = projects.filter(project => project.brandId === activeBrandId);
 
   // Load state from browser cache on initial boot
   useEffect(() => {
     try {
-      const cachedBrand = localStorage.getItem('apex_sync_brand_settings_v1');
-      if (cachedBrand) {
-        const parsed = JSON.parse(cachedBrand);
-        if (parsed && typeof parsed === 'object') {
-          const merged = { ...DEFAULT_BRAND_SETTINGS, ...parsed };
-          // Auto-migrate if logoUrl is empty or not set in cache to show the original brand logo
-          if (!parsed.logoUrl || parsed.logoUrl === '') {
-            merged.logoUrl = DEFAULT_BRAND_SETTINGS.logoUrl;
+      const cachedProfiles = localStorage.getItem('apex_sync_brand_profiles_v2');
+      const cachedActiveBrandId = localStorage.getItem('apex_sync_active_brand_v2');
+
+      if (cachedProfiles) {
+        const parsedProfiles = JSON.parse(cachedProfiles);
+        if (Array.isArray(parsedProfiles) && parsedProfiles.length > 0) {
+          setBrandProfiles(parsedProfiles);
+          const requestedActiveId = cachedActiveBrandId || parsedProfiles[0].id;
+          const validActiveId = parsedProfiles.some((profile: BrandProfile) => profile.id === requestedActiveId)
+            ? requestedActiveId
+            : parsedProfiles[0].id;
+          setActiveBrandId(validActiveId);
+        }
+      } else {
+        // Migrate the original single-brand cache into the V2 workspace model.
+        const cachedBrand = localStorage.getItem('apex_sync_brand_settings_v1');
+        if (cachedBrand) {
+          const parsed = JSON.parse(cachedBrand);
+          if (parsed && typeof parsed === 'object') {
+            const migratedProfile: BrandProfile = {
+              ...createDefaultBrandProfile(),
+              settings: { ...DEFAULT_BRAND_SETTINGS, ...parsed },
+              updatedAt: new Date().toISOString()
+            };
+            setBrandProfiles([migratedProfile]);
+            setActiveBrandId(migratedProfile.id);
+            localStorage.setItem('apex_sync_brand_profiles_v2', JSON.stringify([migratedProfile]));
+            localStorage.setItem('apex_sync_active_brand_v2', migratedProfile.id);
           }
-          setBrandSettings(merged);
         }
       }
     } catch (err) {
-      console.error('Error hydrating brand settings from cache:', err);
+      console.error('Error hydrating brand workspaces from cache:', err);
+    }
+
+    try {
+      const cachedProjects = localStorage.getItem('apex_sync_projects_v3');
+      const cachedActiveProjects = localStorage.getItem('apex_sync_active_projects_v3');
+
+      if (cachedProjects) {
+        const parsedProjects = JSON.parse(cachedProjects);
+        if (Array.isArray(parsedProjects)) {
+          setProjects(parsedProjects);
+        }
+      } else {
+        const defaultProject = createDefaultProject();
+        setProjects([defaultProject]);
+        localStorage.setItem('apex_sync_projects_v3', JSON.stringify([defaultProject]));
+      }
+
+      if (cachedActiveProjects) {
+        const parsedActiveProjects = JSON.parse(cachedActiveProjects);
+        if (parsedActiveProjects && typeof parsedActiveProjects === 'object') {
+          setActiveProjectByBrand(parsedActiveProjects);
+        }
+      } else {
+        const defaultMap = { [DEFAULT_PROFILE_ID]: DEFAULT_PROJECT_ID };
+        setActiveProjectByBrand(defaultMap);
+        localStorage.setItem('apex_sync_active_projects_v3', JSON.stringify(defaultMap));
+      }
+    } catch (err) {
+      console.error('Error hydrating projects from cache:', err);
     }
 
     try {
@@ -71,14 +172,314 @@ export default function App() {
     }
   }, []);
 
-  // Save brand parameters on changes
-  const handleUpdateBrandSettings = (newSettings: BrandSettings) => {
-    setBrandSettings(newSettings);
+  const persistBrandProfiles = (profiles: BrandProfile[], selectedBrandId: string) => {
     try {
-      localStorage.setItem('apex_sync_brand_settings_v1', JSON.stringify(newSettings));
+      localStorage.setItem('apex_sync_brand_profiles_v2', JSON.stringify(profiles));
+      localStorage.setItem('apex_sync_active_brand_v2', selectedBrandId);
     } catch (err) {
-      console.error('Failed to commit brand settings:', err);
+      console.error('Failed to commit brand workspaces:', err);
     }
+  };
+
+  const persistProjects = (nextProjects: StudioProject[], activeMap: Record<string, string>) => {
+    try {
+      localStorage.setItem('apex_sync_projects_v3', JSON.stringify(nextProjects));
+      localStorage.setItem('apex_sync_active_projects_v3', JSON.stringify(activeMap));
+    } catch (err) {
+      console.error('Failed to commit project workspaces:', err);
+    }
+  };
+
+  const copyProjectStorage = (sourceProjectId: string, targetProjectId: string) => {
+    PROJECT_STORAGE_SUFFIXES.forEach(suffix => {
+      const sourceValue = localStorage.getItem(projectStorageKey(sourceProjectId, suffix));
+      if (sourceValue !== null) {
+        localStorage.setItem(projectStorageKey(targetProjectId, suffix), sourceValue);
+      }
+    });
+  };
+
+  const clearProjectStorage = (projectId: string) => {
+    PROJECT_STORAGE_SUFFIXES.forEach(suffix => {
+      localStorage.removeItem(projectStorageKey(projectId, suffix));
+    });
+  };
+
+  // Save brand parameters inside the currently selected workspace.
+  const handleUpdateBrandSettings = (newSettings: BrandSettings) => {
+    setBrandProfiles(currentProfiles => {
+      const now = new Date().toISOString();
+      const updatedProfiles = currentProfiles.map(profile =>
+        profile.id === activeBrandId
+          ? { ...profile, settings: newSettings, updatedAt: now }
+          : profile
+      );
+      persistBrandProfiles(updatedProfiles, activeBrandId);
+      return updatedProfiles;
+    });
+  };
+
+  const handleSelectBrand = (brandId: string) => {
+    if (!brandProfiles.some(profile => profile.id === brandId)) return;
+    setActiveBrandId(brandId);
+    persistBrandProfiles(brandProfiles, brandId);
+
+    const selectedProjectId = activeProjectByBrand[brandId];
+    const selectedProject = projects.find(
+      project => project.id === selectedProjectId && project.brandId === brandId && project.status === 'active'
+    );
+    if (!selectedProject) {
+      setActiveTab('projects');
+    }
+  };
+
+  const handleCreateBrand = () => {
+    setBrandProfiles(currentProfiles => {
+      const now = new Date().toISOString();
+      const currentActiveProfile =
+        currentProfiles.find(profile => profile.id === activeBrandId) || currentProfiles[0];
+
+      const newProfile: BrandProfile = {
+        id: `brand-${Date.now().toString(36)}`,
+        name: `Brand ${currentProfiles.length + 1}`,
+        settings: { ...(currentActiveProfile?.settings || DEFAULT_BRAND_SETTINGS) },
+        createdAt: now,
+        updatedAt: now
+      };
+
+      const updatedProfiles = [...currentProfiles, newProfile];
+      setActiveBrandId(newProfile.id);
+      setActiveTab('projects');
+      persistBrandProfiles(updatedProfiles, newProfile.id);
+      return updatedProfiles;
+    });
+  };
+
+  const handleRenameActiveBrand = (name: string) => {
+    const cleanName = name.trim();
+    if (!cleanName) return;
+
+    setBrandProfiles(currentProfiles => {
+      const updatedProfiles = currentProfiles.map(profile =>
+        profile.id === activeBrandId
+          ? { ...profile, name: cleanName, updatedAt: new Date().toISOString() }
+          : profile
+      );
+      persistBrandProfiles(updatedProfiles, activeBrandId);
+      return updatedProfiles;
+    });
+  };
+
+  const handleDeleteActiveBrand = () => {
+    if (brandProfiles.length <= 1) return;
+
+    const brandProjectsToDelete = projects.filter(project => project.brandId === activeBrandId);
+    brandProjectsToDelete.forEach(project => {
+      try {
+        clearProjectStorage(project.id);
+      } catch (err) {
+        console.error('Failed to clear project data while deleting brand:', err);
+      }
+    });
+
+    const deletedProjectIds = new Set(brandProjectsToDelete.map(project => project.id));
+    const updatedProfiles = brandProfiles.filter(profile => profile.id !== activeBrandId);
+    const updatedProjects = projects.filter(project => project.brandId !== activeBrandId);
+    const updatedExports = exportsList.filter(item =>
+      item.brandId
+        ? item.brandId !== activeBrandId
+        : !item.projectId || !deletedProjectIds.has(item.projectId)
+    );
+    const nextActiveId = updatedProfiles[0].id;
+    const nextActiveMap = { ...activeProjectByBrand };
+    delete nextActiveMap[activeBrandId];
+
+    setBrandProfiles(updatedProfiles);
+    setProjects(updatedProjects);
+    setExportsList(updatedExports);
+    setActiveBrandId(nextActiveId);
+    setActiveProjectByBrand(nextActiveMap);
+    persistBrandProfiles(updatedProfiles, nextActiveId);
+    persistProjects(updatedProjects, nextActiveMap);
+    localStorage.setItem('apex_sync_exports_v1', JSON.stringify(updatedExports));
+
+    const nextProjectId = nextActiveMap[nextActiveId];
+    const hasOpenProject = updatedProjects.some(
+      project => project.id === nextProjectId && project.brandId === nextActiveId && project.status === 'active'
+    );
+    if (!hasOpenProject) {
+      setActiveTab('projects');
+    }
+  };
+
+  const handleCreateProject = (input: { name: string; campaignName: string; description: string }) => {
+    const now = new Date().toISOString();
+    const project: StudioProject = {
+      id: `project-${Date.now().toString(36)}`,
+      brandId: activeBrandId,
+      name: input.name,
+      campaignName: input.campaignName,
+      description: input.description,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      lastOpenedAt: now
+    };
+
+    const nextProjects = [...projects, project];
+    const nextActiveMap = { ...activeProjectByBrand, [activeBrandId]: project.id };
+    setProjects(nextProjects);
+    setActiveProjectByBrand(nextActiveMap);
+    persistProjects(nextProjects, nextActiveMap);
+    setActiveTab('dashboard');
+  };
+
+  const handleOpenProject = (projectId: string) => {
+    const project = projects.find(item => item.id === projectId && item.brandId === activeBrandId);
+    if (!project || project.status === 'archived') return;
+
+    const now = new Date().toISOString();
+    const nextProjects = projects.map(item =>
+      item.id === projectId
+        ? { ...item, lastOpenedAt: now, updatedAt: now }
+        : item
+    );
+    const nextActiveMap = { ...activeProjectByBrand, [activeBrandId]: projectId };
+    setProjects(nextProjects);
+    setActiveProjectByBrand(nextActiveMap);
+    persistProjects(nextProjects, nextActiveMap);
+    setActiveTab('dashboard');
+  };
+
+  const handleUpdateProject = (
+    projectId: string,
+    updates: Partial<Pick<StudioProject, 'name' | 'campaignName' | 'description'>>
+  ) => {
+    const nextProjects = projects.map(project =>
+      project.id === projectId && project.brandId === activeBrandId
+        ? { ...project, ...updates, updatedAt: new Date().toISOString() }
+        : project
+    );
+    setProjects(nextProjects);
+    persistProjects(nextProjects, activeProjectByBrand);
+  };
+
+  const handleDuplicateProject = (projectId: string) => {
+    const source = projects.find(project => project.id === projectId && project.brandId === activeBrandId);
+    if (!source) return;
+
+    const now = new Date().toISOString();
+    const duplicate: StudioProject = {
+      ...source,
+      id: `project-${Date.now().toString(36)}`,
+      name: `${source.name} Copy`,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      lastOpenedAt: now,
+      duplicatedFromId: source.id
+    };
+
+    try {
+      copyProjectStorage(source.id, duplicate.id);
+    } catch (err) {
+      console.error('Failed to duplicate project workspace data:', err);
+    }
+
+    const nextProjects = [...projects, duplicate];
+    const nextActiveMap = { ...activeProjectByBrand, [activeBrandId]: duplicate.id };
+    setProjects(nextProjects);
+    setActiveProjectByBrand(nextActiveMap);
+    persistProjects(nextProjects, nextActiveMap);
+  };
+
+  const handleToggleArchiveProject = (projectId: string) => {
+    const target = projects.find(project => project.id === projectId && project.brandId === activeBrandId);
+    if (!target) return;
+
+    const nextStatus = target.status === 'archived' ? 'active' : 'archived';
+    const nextProjects = projects.map(project =>
+      project.id === projectId
+        ? { ...project, status: nextStatus, updatedAt: new Date().toISOString() }
+        : project
+    );
+
+    let nextActiveMap = { ...activeProjectByBrand };
+    if (nextStatus === 'archived' && nextActiveMap[activeBrandId] === projectId) {
+      const replacement = nextProjects
+        .filter(project => project.brandId === activeBrandId && project.status === 'active' && project.id !== projectId)
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+
+      if (replacement) {
+        nextActiveMap[activeBrandId] = replacement.id;
+      } else {
+        delete nextActiveMap[activeBrandId];
+      }
+    }
+
+    setProjects(nextProjects);
+    setActiveProjectByBrand(nextActiveMap);
+    persistProjects(nextProjects, nextActiveMap);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    const target = projects.find(project => project.id === projectId && project.brandId === activeBrandId);
+    if (!target) return;
+
+    const nextProjects = projects.filter(project => project.id !== projectId);
+    const nextActiveMap = { ...activeProjectByBrand };
+
+    if (nextActiveMap[activeBrandId] === projectId) {
+      const replacement = nextProjects
+        .filter(project => project.brandId === activeBrandId && project.status === 'active')
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+
+      if (replacement) {
+        nextActiveMap[activeBrandId] = replacement.id;
+      } else {
+        delete nextActiveMap[activeBrandId];
+      }
+    }
+
+    try {
+      clearProjectStorage(projectId);
+    } catch (err) {
+      console.error('Failed to clear deleted project workspace data:', err);
+    }
+
+    setProjects(nextProjects);
+    setActiveProjectByBrand(nextActiveMap);
+    persistProjects(nextProjects, nextActiveMap);
+  };
+
+  const handleProjectActivity = useCallback(() => {
+    if (!activeProjectId) return;
+
+    setProjects(currentProjects => {
+      const now = new Date().toISOString();
+      const nextProjects = currentProjects.map(project =>
+        project.id === activeProjectId
+          ? { ...project, updatedAt: now, lastOpenedAt: now }
+          : project
+      );
+
+      try {
+        localStorage.setItem('apex_sync_projects_v3', JSON.stringify(nextProjects));
+        localStorage.setItem('apex_sync_active_projects_v3', JSON.stringify(activeProjectByBrand));
+      } catch (err) {
+        console.error('Failed to update project activity:', err);
+      }
+
+      return nextProjects;
+    });
+  }, [activeProjectId, activeProjectByBrand]);
+
+  const handleNavigation = (tab: string) => {
+    if ((tab === 'studio' || tab === 'slides') && !activeProject) {
+      setActiveTab('projects');
+      return;
+    }
+    setActiveTab(tab);
   };
 
   // Log a new export transaction
@@ -104,12 +505,31 @@ export default function App() {
 
   // Reset entire application back to defaults
   const handleResetApp = () => {
-    setBrandSettings(DEFAULT_BRAND_SETTINGS);
+    const defaultProfile = createDefaultBrandProfile();
+    const defaultProject = createDefaultProject();
+    setBrandProfiles([defaultProfile]);
+    setActiveBrandId(defaultProfile.id);
+    setProjects([defaultProject]);
+    setActiveProjectByBrand({ [defaultProfile.id]: defaultProject.id });
     setExportsList([]);
     try {
       localStorage.removeItem('apex_sync_brand_settings_v1');
+      localStorage.removeItem('apex_sync_brand_profiles_v2');
+      localStorage.removeItem('apex_sync_active_brand_v2');
       localStorage.removeItem('apex_sync_exports_v1');
-      alert('Apex Sync brand state fully purged and reset to system defaults.');
+      localStorage.removeItem('apex_sync_projects_v3');
+      localStorage.removeItem('apex_sync_active_projects_v3');
+      localStorage.removeItem('apex_sync_editor_draft_v2');
+      localStorage.removeItem('apex_carousel_slides_v1');
+      localStorage.removeItem('apex_carousel_pillar_v1');
+      localStorage.removeItem('apex_carousel_day_v1');
+      localStorage.removeItem('apex_carousel_episode_v1');
+      localStorage.removeItem('apex_carousel_series_v1');
+      localStorage.removeItem('apex_carousel_workspace_v2');
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('apex_sync_project_'))
+        .forEach(key => localStorage.removeItem(key));
+      alert('Brand Studio workspace reset to system defaults.');
       setActiveTab('dashboard');
     } catch (err) {
       console.error('Failed to reset application state:', err);
@@ -118,6 +538,10 @@ export default function App() {
 
   // Transition helper from card actions
   const handleSelectTemplate = (id: TemplateId, autoGenerate: boolean) => {
+    if (!activeProject) {
+      setActiveTab('projects');
+      return;
+    }
     setSelectedTemplateId(id);
     setAutoGenerateTrigger(autoGenerate);
     setActiveTab('studio');
@@ -128,27 +552,56 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard':
         return (
-          <Dashboard 
-            onSelectTemplate={handleSelectTemplate} 
-            onViewSlides={() => setActiveTab('slides')}
-            exportCount={(exportsList || []).length}
+          <Dashboard
+            onSelectTemplate={handleSelectTemplate}
+            onViewSlides={() => handleNavigation('slides')}
+            exportCount={activeProjectId ? (exportsList || []).filter(item => item.projectId === activeProjectId).length : 0}
+            activeProjectName={activeProject?.name || null}
+            projectCount={activeBrandProjects.filter(project => project.status === 'active').length}
+            onViewProjects={() => setActiveTab('projects')}
           />
         );
       case 'studio':
         return (
           <Editor
-            key={`${selectedTemplateId}-${autoGenerateTrigger ? 'auto' : 'manual'}`}
+            key={`${activeProjectId}-${selectedTemplateId}-${autoGenerateTrigger ? 'auto' : 'manual'}`}
             initialTemplateId={selectedTemplateId}
             autoGenerateOnLoad={autoGenerateTrigger}
             brandSettings={brandSettings}
+            brandId={activeBrandId}
+            projectId={activeProject!.id}
+            projectName={activeProject!.name}
+            projectCampaignName={activeProject!.campaignName}
+            onProjectActivity={handleProjectActivity}
             onAddExport={handleAddExport}
           />
         );
       case 'slides':
         return (
           <CarouselBuilder
+            key={activeProjectId || 'no-project'}
             brandSettings={brandSettings}
+            brandId={activeBrandId}
+            projectId={activeProject!.id}
+            projectName={activeProject!.name}
+            projectCampaignName={activeProject!.campaignName}
+            onProjectActivity={handleProjectActivity}
             onAddExport={handleAddExport}
+          />
+        );
+      case 'projects':
+        return (
+          <Projects
+            brandName={activeBrandProfile?.name || 'Workspace'}
+            projects={activeBrandProjects}
+            activeProjectId={activeProjectId}
+            exportsList={exportsList}
+            onCreateProject={handleCreateProject}
+            onOpenProject={handleOpenProject}
+            onUpdateProject={handleUpdateProject}
+            onDuplicateProject={handleDuplicateProject}
+            onToggleArchiveProject={handleToggleArchiveProject}
+            onDeleteProject={handleDeleteProject}
           />
         );
       case 'templates':
@@ -188,17 +641,25 @@ export default function App() {
         );
       case 'assets':
         return (
-          <BrandAssets 
-            brandSettings={brandSettings} 
+          <BrandAssets
+            brandSettings={brandSettings}
+            brandProfiles={brandProfiles}
+            activeBrandId={activeBrandId}
+            onSelectBrand={handleSelectBrand}
+            onCreateBrand={handleCreateBrand}
+            onRenameActiveBrand={handleRenameActiveBrand}
+            onDeleteActiveBrand={handleDeleteActiveBrand}
             onUpdateBrandSettings={handleUpdateBrandSettings}
           />
         );
       case 'exports':
         return (
-          <ExportHistory 
-            exportsList={exportsList} 
+          <ExportHistory
+            exportsList={exportsList.filter(item => !item.brandId || item.brandId === activeBrandId)}
             onClearHistory={handleClearHistory}
             brandSettings={brandSettings}
+            activeProjectId={activeProjectId}
+            activeProjectName={activeProject?.name || null}
           />
         );
       case 'settings':
@@ -216,7 +677,7 @@ export default function App() {
     <div id="apex-app-shell" className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden font-sans">
       
       {/* LEFT STATIC SIDEBAR NAVIGATION */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={handleNavigation} />
 
       {/* RIGHT MAIN WORKSPACE FRAME */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -226,8 +687,17 @@ export default function App() {
           
           {/* Breadcrumb Info */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-neutral-500 font-mono tracking-wider uppercase">STUDIO CLOUD</span>
+            <span className="text-[11px] font-semibold text-neutral-500 font-mono tracking-wider uppercase">STUDIO WORKSPACE</span>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
+            {activeProject && (
+              <>
+                <span className="text-xs text-neutral-600">/</span>
+                <span className="text-[11px] font-semibold text-neutral-400 max-w-[220px] truncate">
+                  {activeProject.name}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
+              </>
+            )}
             <span className="text-xs font-semibold text-neutral-300 capitalize font-['Space_Grotesk'] tracking-wide">
               {activeTab === 'studio' ? 'Design Engine' : activeTab.replace('-', ' ')}
             </span>
@@ -236,21 +706,21 @@ export default function App() {
           {/* Connected state & Profile indicators */}
           <div className="flex items-center gap-6">
             
-            {/* Server sync status */}
+            {/* Workspace status */}
             <div className="flex items-center gap-2">
               <Database className="w-3.5 h-3.5 text-[#C7A248]" />
               <span className="text-[10px] font-mono font-semibold text-neutral-500 uppercase tracking-widest hidden md:inline">
-                GEMINI LINK OPERATIONAL
+                WORKSPACE READY
               </span>
             </div>
 
             {/* Profile */}
             <div className="flex items-center gap-2 border-l border-neutral-800 pl-4">
               <span className="text-xs text-neutral-400 font-medium hidden sm:inline">
-                Olaoluwa
+                {activeBrandProfile?.name || 'Workspace'}
               </span>
               <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#C7A248] to-[#927129] flex items-center justify-center font-bold text-black text-xs">
-                O
+                {(activeBrandProfile?.name || 'W').charAt(0).toUpperCase()}
               </div>
             </div>
 

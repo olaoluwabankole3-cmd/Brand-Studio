@@ -39,26 +39,41 @@ interface EditorProps {
   initialTemplateId: TemplateId;
   autoGenerateOnLoad: boolean;
   brandSettings: BrandSettings;
+  brandId: string;
+  projectId: string;
+  projectName: string;
+  projectCampaignName: string;
+  onProjectActivity: () => void;
   onAddExport: (item: ExportHistoryItem) => void;
 }
 
 export default function Editor({ 
   initialTemplateId, 
-  autoGenerateOnLoad, 
+  autoGenerateOnLoad,
   brandSettings,
+  brandId,
+  projectId,
+  projectName,
+  projectCampaignName,
+  onProjectActivity,
   onAddExport
 }: EditorProps) {
   // Canvas settings state
   const [templateId, setTemplateId] = useState<TemplateId>(initialTemplateId);
-  const [series, setSeries] = useState(SERIES_OPTIONS[0]);
+  const [series, setSeries] = useState(projectCampaignName || SERIES_OPTIONS[0]);
   const [episode, setEpisode] = useState(EPISODE_OPTIONS[0]);
   const [day, setDay] = useState(DAY_OPTIONS[0]);
   const [headline, setHeadline] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [quote, setQuote] = useState('');
+  const currentMonthLabel = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+
   const [footerLeft, setFooterLeft] = useState('Apex Sync');
   const [footerCenter, setFooterCenter] = useState('Enterprise Intelligence');
-  const [footerRight, setFooterRight] = useState('August 2026');
+  const [footerRight, setFooterRight] = useState(currentMonthLabel);
   const [backgroundId, setBackgroundId] = useState<BackgroundId>('matte-black');
   
   // Brand toggle states
@@ -102,9 +117,20 @@ export default function Editor({
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasScale, setCanvasScale] = useState(0.4);
+  const restoredTemplateRef = useRef<TemplateId | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const editorStorageKey = `apex_sync_project_${projectId}_editor_v1`;
 
-  // Sync templates default copy and sizing when changing templates
+  // Sync template defaults when the user intentionally changes templates.
   useEffect(() => {
+    if (restoredTemplateRef.current) {
+      if (restoredTemplateRef.current === templateId) {
+        restoredTemplateRef.current = null;
+        return;
+      }
+      restoredTemplateRef.current = null;
+    }
+
     const selected = TEMPLATE_PRESETS.find(t => t.id === templateId);
     if (selected) {
       setHeadline(selected.defaultHeadline);
@@ -164,6 +190,146 @@ export default function Editor({
     setSubtitleAlign('default');
     setQuoteAlign('default');
   }, [templateId]);
+
+  // Restore the most recent working draft from this browser.
+  useEffect(() => {
+    try {
+      const scopedDraft = localStorage.getItem(editorStorageKey);
+      const legacyDraft =
+        projectId === 'apex-enterprise-intelligence'
+          ? localStorage.getItem('apex_sync_editor_draft_v2')
+          : null;
+      const cachedDraft = scopedDraft || legacyDraft;
+
+      if (cachedDraft) {
+        const parsed = JSON.parse(cachedDraft);
+
+        if (parsed.templateId && TEMPLATE_PRESETS.some(t => t.id === parsed.templateId)) {
+          restoredTemplateRef.current = parsed.templateId as TemplateId;
+          setTemplateId(parsed.templateId as TemplateId);
+        }
+
+        if (typeof parsed.series === 'string') setSeries(parsed.series);
+        if (typeof parsed.episode === 'string') setEpisode(parsed.episode);
+        if (typeof parsed.day === 'string') setDay(parsed.day);
+        if (typeof parsed.headline === 'string') setHeadline(parsed.headline);
+        if (typeof parsed.subtitle === 'string') setSubtitle(parsed.subtitle);
+        if (typeof parsed.quote === 'string') setQuote(parsed.quote);
+        if (typeof parsed.footerLeft === 'string') setFooterLeft(parsed.footerLeft);
+        if (typeof parsed.footerCenter === 'string') setFooterCenter(parsed.footerCenter);
+        if (typeof parsed.footerRight === 'string') setFooterRight(parsed.footerRight);
+        if (typeof parsed.backgroundId === 'string') setBackgroundId(parsed.backgroundId as BackgroundId);
+
+        if (typeof parsed.showLogo === 'boolean') setShowLogo(parsed.showLogo);
+        if (typeof parsed.showFooter === 'boolean') setShowFooter(parsed.showFooter);
+        if (typeof parsed.showDayCounter === 'boolean') setShowDayCounter(parsed.showDayCounter);
+        if (typeof parsed.showEpisode === 'boolean') setShowEpisode(parsed.showEpisode);
+        if (typeof parsed.showQrCode === 'boolean') setShowQrCode(parsed.showQrCode);
+        if (typeof parsed.showWebsite === 'boolean') setShowWebsite(parsed.showWebsite);
+
+        if (typeof parsed.headlineSize === 'number') setHeadlineSize(parsed.headlineSize);
+        if (typeof parsed.headlineOffset === 'number') setHeadlineOffset(parsed.headlineOffset);
+        if (typeof parsed.headlineAlign === 'string') setHeadlineAlign(parsed.headlineAlign);
+        if (typeof parsed.subtitleSize === 'number') setSubtitleSize(parsed.subtitleSize);
+        if (typeof parsed.subtitleOffset === 'number') setSubtitleOffset(parsed.subtitleOffset);
+        if (typeof parsed.subtitleAlign === 'string') setSubtitleAlign(parsed.subtitleAlign);
+        if (typeof parsed.quoteSize === 'number') setQuoteSize(parsed.quoteSize);
+        if (typeof parsed.quoteOffset === 'number') setQuoteOffset(parsed.quoteOffset);
+        if (typeof parsed.quoteAlign === 'string') setQuoteAlign(parsed.quoteAlign);
+        if (typeof parsed.metaSize === 'number') setMetaSize(parsed.metaSize);
+        if (typeof parsed.metaOffset === 'number') setMetaOffset(parsed.metaOffset);
+        if (typeof parsed.footerSize === 'number') setFooterSize(parsed.footerSize);
+        if (typeof parsed.footerOffset === 'number') setFooterOffset(parsed.footerOffset);
+        if (typeof parsed.logoSize === 'number') setLogoSize(parsed.logoSize);
+        if (typeof parsed.logoOffset === 'number') setLogoOffset(parsed.logoOffset);
+      }
+    } catch (err) {
+      console.error('Failed to restore Brand Studio draft:', err);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, [editorStorageKey]);
+
+  // Autosave editor state after hydration so navigation or refresh does not destroy work.
+  useEffect(() => {
+    if (!draftLoaded) return;
+
+    try {
+      localStorage.setItem(editorStorageKey, JSON.stringify({
+        templateId,
+        series,
+        episode,
+        day,
+        headline,
+        subtitle,
+        quote,
+        footerLeft,
+        footerCenter,
+        footerRight,
+        backgroundId,
+        showLogo,
+        showFooter,
+        showDayCounter,
+        showEpisode,
+        showQrCode,
+        showWebsite,
+        headlineSize,
+        headlineOffset,
+        headlineAlign,
+        subtitleSize,
+        subtitleOffset,
+        subtitleAlign,
+        quoteSize,
+        quoteOffset,
+        quoteAlign,
+        metaSize,
+        metaOffset,
+        footerSize,
+        footerOffset,
+        logoSize,
+        logoOffset
+      }));
+      onProjectActivity();
+    } catch (err) {
+      console.error('Failed to autosave Brand Studio draft:', err);
+    }
+  }, [
+    draftLoaded,
+    editorStorageKey,
+    onProjectActivity,
+    templateId,
+    series,
+    episode,
+    day,
+    headline,
+    subtitle,
+    quote,
+    footerLeft,
+    footerCenter,
+    footerRight,
+    backgroundId,
+    showLogo,
+    showFooter,
+    showDayCounter,
+    showEpisode,
+    showQrCode,
+    showWebsite,
+    headlineSize,
+    headlineOffset,
+    headlineAlign,
+    subtitleSize,
+    subtitleOffset,
+    subtitleAlign,
+    quoteSize,
+    quoteOffset,
+    quoteAlign,
+    metaSize,
+    metaOffset,
+    footerSize,
+    footerOffset,
+    logoSize,
+    logoOffset
+  ]);
 
   const handleResetSizing = () => {
     switch (templateId) {
@@ -371,7 +537,11 @@ export default function Editor({
         // Add to export logs
         onAddExport({
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toISOString(),
+          brandId,
+          brandSnapshot: { ...brandSettings },
+          projectId,
+          projectName,
           templateId,
           templateName: TEMPLATE_PRESETS.find(t => t.id === templateId)?.name || 'Template',
           headline,
@@ -694,7 +864,11 @@ export default function Editor({
       // Log export transaction
       onAddExport({
         id: uniqueId,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toISOString(),
+        brandId,
+        brandSnapshot: { ...brandSettings },
+        projectId,
+        projectName,
         templateId,
         templateName: TEMPLATE_PRESETS.find(t => t.id === templateId)?.name || 'Template',
         headline,
@@ -760,15 +934,15 @@ export default function Editor({
           <h2 className="text-lg font-bold font-['Space_Grotesk'] text-white">System Configuration</h2>
         </div>
 
-        {/* AI Co-Creator Block */}
+        {/* Optional drafting assistant */}
         <div className="p-6 border-b border-[#1F1F1F] bg-[#111111]/40 space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#C7A248]" />
-              AI Prompt Orchestrator
+              Draft Assistant
             </span>
             <span className="text-[9px] px-1.5 py-0.5 bg-[#C7A248]/10 border border-[#C7A248]/20 text-[#C7A248] font-mono rounded">
-              GEMINI 2.5
+              CONTENT ENGINE
             </span>
           </div>
           
@@ -793,10 +967,10 @@ export default function Editor({
               <div className="text-[10px] text-[#C7A248] bg-[#C7A248]/5 border border-[#C7A248]/25 rounded-lg p-3 space-y-1">
                 <div className="font-bold flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#C7A248] animate-pulse shrink-0" />
-                  <span>AI Backend Rate-Limited</span>
+                  <span>Draft Service Unavailable</span>
                 </div>
                 <p className="text-neutral-400 leading-relaxed font-sans">
-                  The Gemini API is currently experiencing rate-limits or quota limits. We have loaded a premium, high-fidelity brand preset to ensure you can continue designing without interruption.
+                  The optional drafting service is currently unavailable. A local brand preset has been loaded so you can continue designing without interruption.
                 </p>
               </div>
             )}

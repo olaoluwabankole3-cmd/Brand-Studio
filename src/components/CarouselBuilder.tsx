@@ -33,7 +33,13 @@ import { jsPDF } from 'jspdf';
 import { BrandSettings, ExportHistoryItem } from '../types';
 
 interface CarouselBuilderProps {
+  key?: string;
   brandSettings: BrandSettings;
+  brandId: string;
+  projectId: string;
+  projectName: string;
+  projectCampaignName: string;
+  onProjectActivity: () => void;
   onAddExport: (item: ExportHistoryItem) => void;
 }
 
@@ -115,17 +121,30 @@ interface SlideData {
   microTagRight: string;
 }
 
-export default function CarouselBuilder({ brandSettings, onAddExport }: CarouselBuilderProps) {
+export default function CarouselBuilder({
+  brandSettings,
+  brandId,
+  projectId,
+  projectName,
+  projectCampaignName,
+  onProjectActivity,
+  onAddExport
+}: CarouselBuilderProps) {
   // Global slide system state
   const [activePillar, setActivePillar] = useState<string>('philosophy');
   const [dayCounter, setDayCounter] = useState<string>('DAY 01');
   const [episodeCounter, setEpisodeCounter] = useState<string>('EPISODE 01');
-  const [seriesName, setSeriesName] = useState<string>('Enterprise Intelligence');
+  const [seriesName, setSeriesName] = useState<string>(projectCampaignName || 'Enterprise Intelligence');
   
   // Footer settings
+  const currentMonthLabel = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+
   const [footerOwner, setFooterOwner] = useState<string>('Apex Sync');
   const [footerProduction, setFooterProduction] = useState<string>('Enterprise Intelligence Series');
-  const [footerMonth, setFooterMonth] = useState<string>('August 2026');
+  const [footerMonth, setFooterMonth] = useState<string>(currentMonthLabel);
   const [footerWebsite, setFooterWebsite] = useState<string>('apexsync.io');
 
   // List of slides in the carousel deck
@@ -140,6 +159,15 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const storageKeys = {
+    slides: `apex_sync_project_${projectId}_carousel_slides_v1`,
+    pillar: `apex_sync_project_${projectId}_carousel_pillar_v1`,
+    day: `apex_sync_project_${projectId}_carousel_day_v1`,
+    episode: `apex_sync_project_${projectId}_carousel_episode_v1`,
+    series: `apex_sync_project_${projectId}_carousel_series_v1`,
+    workspace: `apex_sync_project_${projectId}_carousel_workspace_v1`
+  };
 
   // Default slide initializer
   const createDefaultSlide = (layoutId: string, index: number): SlideData => {
@@ -311,16 +339,40 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
   // Populate default 7-slide carousel flow on initial load
   useEffect(() => {
     try {
-      const cachedSlides = localStorage.getItem('apex_carousel_slides_v1');
-      const cachedPillar = localStorage.getItem('apex_carousel_pillar_v1');
-      const cachedDay = localStorage.getItem('apex_carousel_day_v1');
-      const cachedEpisode = localStorage.getItem('apex_carousel_episode_v1');
-      const cachedSeries = localStorage.getItem('apex_carousel_series_v1');
+      const allowLegacyMigration = projectId === 'apex-enterprise-intelligence';
+
+      const cachedSlides =
+        localStorage.getItem(storageKeys.slides) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_slides_v1') : null);
+      const cachedPillar =
+        localStorage.getItem(storageKeys.pillar) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_pillar_v1') : null);
+      const cachedDay =
+        localStorage.getItem(storageKeys.day) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_day_v1') : null);
+      const cachedEpisode =
+        localStorage.getItem(storageKeys.episode) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_episode_v1') : null);
+      const cachedSeries =
+        localStorage.getItem(storageKeys.series) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_series_v1') : null);
+      const cachedWorkspace =
+        localStorage.getItem(storageKeys.workspace) ||
+        (allowLegacyMigration ? localStorage.getItem('apex_carousel_workspace_v2') : null);
 
       if (cachedPillar) setActivePillar(cachedPillar);
       if (cachedDay) setDayCounter(cachedDay);
       if (cachedEpisode) setEpisodeCounter(cachedEpisode);
       if (cachedSeries) setSeriesName(cachedSeries);
+
+      if (cachedWorkspace) {
+        const workspace = JSON.parse(cachedWorkspace);
+        if (typeof workspace.footerOwner === 'string') setFooterOwner(workspace.footerOwner);
+        if (typeof workspace.footerProduction === 'string') setFooterProduction(workspace.footerProduction);
+        if (typeof workspace.footerMonth === 'string') setFooterMonth(workspace.footerMonth);
+        if (typeof workspace.footerWebsite === 'string') setFooterWebsite(workspace.footerWebsite);
+        if (typeof workspace.activeSlideIndex === 'number') setActiveSlideIndex(Math.max(0, workspace.activeSlideIndex));
+      }
 
       if (cachedSlides) {
         const parsed = JSON.parse(cachedSlides);
@@ -345,16 +397,33 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
       { ...createDefaultSlide('L08', 6), quoteText: "How much of your day is spent performing actions that can be written down as a formal state machine?" }
     ];
     setSlides(initialDeck);
-  }, []);
+  }, [projectId]);
+
+  // Persist workspace-level settings separately from the deck content.
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKeys.workspace, JSON.stringify({
+        footerOwner,
+        footerProduction,
+        footerMonth,
+        footerWebsite,
+        activeSlideIndex
+      }));
+      onProjectActivity();
+    } catch (e) {
+      console.error('Failed to cache carousel workspace:', e);
+    }
+  }, [projectId, footerOwner, footerProduction, footerMonth, footerWebsite, activeSlideIndex, onProjectActivity]);
 
   // Save changes to localStorage on slide updates
   const persistState = (currentSlides: SlideData[], pillar: string, day: string, episode: string, series: string) => {
     try {
-      localStorage.setItem('apex_carousel_slides_v1', JSON.stringify(currentSlides));
-      localStorage.setItem('apex_carousel_pillar_v1', pillar);
-      localStorage.setItem('apex_carousel_day_v1', day);
-      localStorage.setItem('apex_carousel_episode_v1', episode);
-      localStorage.setItem('apex_carousel_series_v1', series);
+      localStorage.setItem(storageKeys.slides, JSON.stringify(currentSlides));
+      localStorage.setItem(storageKeys.pillar, pillar);
+      localStorage.setItem(storageKeys.day, day);
+      localStorage.setItem(storageKeys.episode, episode);
+      localStorage.setItem(storageKeys.series, series);
+      onProjectActivity();
     } catch (e) {
       console.error("Failed to cache slides:", e);
     }
@@ -442,7 +511,11 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
       // Log export action in App context
       onAddExport({
         id: Math.random().toString(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        timestamp: new Date().toISOString(),
+        brandId,
+        brandSnapshot: { ...brandSettings },
+        projectId,
+        projectName,
         templateId: 'enterprise-philosophy',
         templateName: `Apex Slide ${activeSlideIndex + 1} (${slides[activeSlideIndex]?.layoutId})`,
         headline: slides[activeSlideIndex]?.headline || slides[activeSlideIndex]?.quoteText || 'Carousel Slide',
@@ -502,7 +575,11 @@ export default function CarouselBuilder({ brandSettings, onAddExport }: Carousel
 
       onAddExport({
         id: Math.random().toString(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        timestamp: new Date().toISOString(),
+        brandId,
+        brandSnapshot: { ...brandSettings },
+        projectId,
+        projectName,
         templateId: 'enterprise-philosophy',
         templateName: `Master Carousel (${slides.length} slides)`,
         headline: seriesName,
