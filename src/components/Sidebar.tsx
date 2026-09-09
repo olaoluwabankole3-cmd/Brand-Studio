@@ -43,7 +43,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { name: 'Proposal Builder', icon: FileText },
     { name: 'Email Header Builder', icon: Mail },
     { name: 'Social Scheduler', icon: Calendar },
-    { name: 'AI Copywriter', icon: Cpu },
+    { name: 'Draft Assistant', icon: Cpu },
     { name: 'Brand Analytics', icon: BarChart3 },
     { name: 'Team Collaboration', icon: Users },
   ];
