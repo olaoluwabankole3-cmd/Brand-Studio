@@ -9,7 +9,13 @@ import {
   FolderKanban,
   Layers3,
   Presentation,
-  Sparkles
+  Sparkles,
+  FileText,
+  Mail,
+  Calendar,
+  Cpu,
+  BarChart3,
+  Users
 } from 'lucide-react';
 import { TemplateId } from '../types';
 import { TEMPLATE_PRESETS } from '../data';
@@ -30,6 +36,39 @@ const previewAccent: Record<string, string> = {
   'building-apex': 'from-violet-400/20 via-transparent to-transparent',
   'enterprise-vision': 'from-rose-400/20 via-transparent to-transparent'
 };
+
+const enterpriseExpansion = [
+  {
+    name: 'Proposal Builder',
+    description: 'Turn approved campaign and brand context into structured client-ready proposals.',
+    icon: FileText
+  },
+  {
+    name: 'Email Header Builder',
+    description: 'Create branded email graphics and campaign header systems from reusable tokens.',
+    icon: Mail
+  },
+  {
+    name: 'Social Scheduler',
+    description: 'Plan content releases around projects, campaigns and publishing calendars.',
+    icon: Calendar
+  },
+  {
+    name: 'Draft Assistant',
+    description: 'Support first-draft generation and refinement using project and brand context.',
+    icon: Cpu
+  },
+  {
+    name: 'Brand Analytics',
+    description: 'Bring performance signals back into the workspace to guide future creative decisions.',
+    icon: BarChart3
+  },
+  {
+    name: 'Team Collaboration',
+    description: 'Extend the workspace for approvals, shared ownership and multi-user production.',
+    icon: Users
+  }
+];
 
 export default function Dashboard({
   onSelectTemplate,
@@ -185,6 +224,57 @@ export default function Dashboard({
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-[#0E1115] p-6 lg:p-8">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(circle_at_top_right,rgba(212,175,90,0.07),transparent_65%)] pointer-events-none" />
+
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-6">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF5A]/15 bg-[#D4AF5A]/[0.05] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF5A]">
+              Product roadmap
+            </div>
+            <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold tracking-tight text-white">
+              Enterprise Expansion
+            </h2>
+            <p className="mt-2 text-[13px] leading-6 text-neutral-500">
+              Brand Studio is designed to grow beyond asset creation into a broader content-operations platform connecting planning, production, publishing and performance.
+            </p>
+          </div>
+
+          <div className="text-[11px] text-neutral-600 lg:text-right max-w-xs">
+            Planned modules extend the existing project, brand and workflow architecture.
+          </div>
+        </div>
+
+        <div className="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {enterpriseExpansion.map((module) => {
+            const Icon = module.icon;
+
+            return (
+              <article
+                key={module.name}
+                className="group rounded-2xl border border-white/[0.055] bg-[#0A0D11]/70 p-4 hover:border-[#D4AF5A]/18 hover:bg-[#0B0E12] transition-all duration-200"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.025] flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-neutral-500 group-hover:text-[#D4AF5A] transition-colors" />
+                  </div>
+                  <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                    Planned
+                  </span>
+                </div>
+
+                <h3 className="mt-4 font-['Space_Grotesk'] text-[14px] font-semibold text-neutral-200">
+                  {module.name}
+                </h3>
+                <p className="mt-1.5 text-[11px] leading-5 text-neutral-600">
+                  {module.description}
+                </p>
+              </article>
+            );
+          })}
         </div>
       </section>
     </div>
