@@ -674,7 +674,7 @@ export default function App() {
   };
 
   return (
-    <div id="apex-app-shell" className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden font-sans">
+    <div id="apex-app-shell" className="flex h-screen bg-[#080A0D] text-white overflow-hidden font-sans">
       
       {/* LEFT STATIC SIDEBAR NAVIGATION */}
       <Sidebar activeTab={activeTab} setActiveTab={handleNavigation} />
@@ -683,43 +683,43 @@ export default function App() {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         
         {/* Workspace Top Bar (Header Panel) */}
-        <header className="h-[64px] border-b border-[#1F1F1F] px-8 flex items-center justify-between bg-[#0E0E0E] shrink-0 select-none">
+        <header className="h-[64px] border-b border-white/[0.06] px-6 lg:px-8 flex items-center justify-between bg-[#0B0D10]/95 backdrop-blur-xl shrink-0 select-none">
           
           {/* Breadcrumb Info */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-neutral-500 font-mono tracking-wider uppercase">STUDIO WORKSPACE</span>
+            <span className="text-[12px] font-semibold text-neutral-400">Brand Studio</span>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
             {activeProject && (
               <>
                 <span className="text-xs text-neutral-600">/</span>
-                <span className="text-[11px] font-semibold text-neutral-400 max-w-[220px] truncate">
+                <span className="text-[12px] font-medium text-neutral-500 max-w-[240px] truncate">
                   {activeProject.name}
                 </span>
                 <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
               </>
             )}
-            <span className="text-xs font-semibold text-neutral-300 capitalize font-['Space_Grotesk'] tracking-wide">
+            <span className="text-[12px] font-semibold text-neutral-200 capitalize font-['Space_Grotesk']">
               {activeTab === 'studio' ? 'Design Engine' : activeTab.replace('-', ' ')}
             </span>
           </div>
 
           {/* Connected state & Profile indicators */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             
             {/* Workspace status */}
             <div className="flex items-center gap-2">
-              <Database className="w-3.5 h-3.5 text-[#C7A248]" />
-              <span className="text-[10px] font-mono font-semibold text-neutral-500 uppercase tracking-widest hidden md:inline">
-                WORKSPACE READY
+              <Database className="w-3.5 h-3.5 text-[#D4AF5A]" />
+              <span className="text-[10px] font-semibold text-neutral-600 uppercase tracking-[0.14em] hidden md:inline">
+                Workspace ready
               </span>
             </div>
 
             {/* Profile */}
-            <div className="flex items-center gap-2 border-l border-neutral-800 pl-4">
+            <div className="flex items-center gap-2 border-l border-white/[0.06] pl-4">
               <span className="text-xs text-neutral-400 font-medium hidden sm:inline">
                 {activeBrandProfile?.name || 'Workspace'}
               </span>
-              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#C7A248] to-[#927129] flex items-center justify-center font-bold text-black text-xs">
+              <div className="w-8 h-8 rounded-xl bg-[#D4AF5A] flex items-center justify-center font-bold text-[#15171B] text-xs shadow-[0_8px_20px_rgba(212,175,90,0.14)]">
                 {(activeBrandProfile?.name || 'W').charAt(0).toUpperCase()}
               </div>
             </div>
@@ -729,7 +729,7 @@ export default function App() {
         </header>
 
         {/* Dynamic sub-view viewport */}
-        <main className="flex-1 overflow-y-auto bg-[#070707]">
+        <main className="flex-1 overflow-y-auto bg-[#080A0D]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

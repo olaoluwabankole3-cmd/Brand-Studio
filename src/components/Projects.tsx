@@ -130,21 +130,21 @@ export default function Projects({
   };
 
   return (
-    <div id="projects-tab" className="p-8 max-w-7xl mx-auto space-y-8">
+    <div id="projects-tab" className="px-6 py-7 lg:px-10 lg:py-9 max-w-[1440px] mx-auto space-y-8">
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <FolderKanban className="w-5 h-5 text-[#C7A248]" />
-            <h1 className="text-2xl font-bold font-['Space_Grotesk'] text-white">Projects</h1>
+            <FolderKanban className="w-5 h-5 text-[#D4AF5A]" />
+            <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight font-['Space_Grotesk'] text-white">Projects</h1>
           </div>
-          <p className="text-neutral-400 text-xs max-w-2xl">
+          <p className="text-neutral-500 text-[13px] leading-6 max-w-2xl">
             Organize campaigns, drafts, carousel decks, and exports under a project owned by <strong className="text-neutral-300">{brandName}</strong>.
           </p>
         </div>
 
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center justify-center gap-2 bg-[#C7A248] hover:bg-[#b08d38] text-black px-4 py-2.5 rounded-lg text-xs font-bold transition-colors"
+          className="flex items-center justify-center gap-2 bg-[#D4AF5A] hover:bg-[#E0BD69] text-[#15171B] px-4 py-2.5 rounded-xl text-[12px] font-bold transition-colors shadow-[0_10px_24px_rgba(212,175,90,0.14)]"
         >
           <Plus className="w-4 h-4" />
           New Project
@@ -152,15 +152,15 @@ export default function Projects({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[#0E0E0E] border border-[#1F1F1F] rounded-xl p-5">
+        <div className="bg-[#0E1115] border border-white/[0.06] rounded-2xl p-5">
           <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Active Projects</span>
           <div className="text-2xl font-bold text-white mt-2">{activeCount}</div>
         </div>
-        <div className="bg-[#0E0E0E] border border-[#1F1F1F] rounded-xl p-5">
+        <div className="bg-[#0E1115] border border-white/[0.06] rounded-2xl p-5">
           <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Archived</span>
           <div className="text-2xl font-bold text-white mt-2">{archivedCount}</div>
         </div>
-        <div className="bg-[#0E0E0E] border border-[#1F1F1F] rounded-xl p-5">
+        <div className="bg-[#0E1115] border border-white/[0.06] rounded-2xl p-5">
           <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Project Assets</span>
           <div className="text-2xl font-bold text-white mt-2">
             {projects.reduce((sum, project) => sum + (exportCountByProject.get(project.id) || 0), 0)}
@@ -169,7 +169,7 @@ export default function Projects({
       </div>
 
       {showCreate && (
-        <div className="bg-[#0E0E0E] border border-[#C7A248]/30 rounded-2xl p-6 space-y-5 shadow-2xl">
+        <div className="bg-[#0E1115] border border-[#D4AF5A]/20 rounded-2xl p-6 space-y-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-white">Create Project</h2>
@@ -188,7 +188,7 @@ export default function Projects({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Enterprise Intelligence — September"
-                className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#C7A248]/50"
+                className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF5A]/50"
               />
             </div>
             <div className="space-y-2">
@@ -197,7 +197,7 @@ export default function Projects({
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
                 placeholder="e.g. Enterprise Intelligence Series"
-                className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#C7A248]/50"
+                className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF5A]/50"
               />
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function Projects({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this project producing, for whom, and for what campaign?"
               rows={3}
-              className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white resize-none focus:outline-none focus:border-[#C7A248]/50"
+              className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-white resize-none focus:outline-none focus:border-[#D4AF5A]/50"
             />
           </div>
 
@@ -223,7 +223,7 @@ export default function Projects({
             <button
               onClick={handleCreate}
               disabled={!name.trim()}
-              className="px-4 py-2 rounded-lg bg-[#C7A248] text-black text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-lg bg-[#D4AF5A] text-[#15171B] text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Create & Open
             </button>
@@ -240,7 +240,7 @@ export default function Projects({
         {archivedCount > 0 && (
           <button
             onClick={() => setShowArchived(value => !value)}
-            className="text-[10px] font-semibold text-neutral-500 hover:text-[#C7A248] transition-colors"
+            className="text-[10px] font-semibold text-neutral-500 hover:text-[#D4AF5A] transition-colors"
           >
             {showArchived ? 'Hide archived' : `Show archived (${archivedCount})`}
           </button>
@@ -266,8 +266,8 @@ export default function Projects({
               return (
                 <div
                   key={project.id}
-                  className={`bg-[#0E0E0E] border rounded-2xl p-6 transition-all ${
-                    isActive ? 'border-[#C7A248]/50 shadow-[0_0_0_1px_rgba(199,162,72,0.08)]' : 'border-[#1F1F1F] hover:border-neutral-700'
+                  className={`bg-[#0E1115] border rounded-2xl p-6 transition-all duration-200 ${
+                    isActive ? 'border-[#D4AF5A]/40 shadow-[0_14px_40px_rgba(0,0,0,0.18)]' : 'border-white/[0.06] hover:border-white/[0.12]'
                   } ${project.status === 'archived' ? 'opacity-70' : ''}`}
                 >
                   {isEditing ? (
@@ -276,20 +276,20 @@ export default function Projects({
                         <input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#C7A248]/50"
+                          className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF5A]/50"
                         />
                         <input
                           value={editCampaignName}
                           onChange={(e) => setEditCampaignName(e.target.value)}
                           placeholder="Campaign / Series"
-                          className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#C7A248]/50"
+                          className="bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF5A]/50"
                         />
                       </div>
                       <textarea
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
                         rows={3}
-                        className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white resize-none focus:outline-none focus:border-[#C7A248]/50"
+                        className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white resize-none focus:outline-none focus:border-[#D4AF5A]/50"
                       />
                       <div className="flex justify-end gap-2">
                         <button
@@ -300,7 +300,7 @@ export default function Projects({
                         </button>
                         <button
                           onClick={() => saveEdit(project.id)}
-                          className="px-3 py-2 rounded-lg bg-[#C7A248] text-black text-xs font-bold flex items-center gap-2"
+                          className="px-3 py-2 rounded-lg bg-[#D4AF5A] text-[#15171B] text-xs font-bold flex items-center gap-2"
                         >
                           <Save className="w-3.5 h-3.5" />
                           Save
@@ -313,7 +313,7 @@ export default function Projects({
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             {isActive && (
-                              <span className="px-2 py-0.5 rounded bg-[#C7A248]/10 border border-[#C7A248]/20 text-[9px] text-[#C7A248] font-bold uppercase tracking-widest">
+                              <span className="px-2 py-0.5 rounded bg-[#C7A248]/10 border border-[#C7A248]/20 text-[9px] text-[#D4AF5A] font-bold uppercase tracking-widest">
                                 Open
                               </span>
                             )}
@@ -323,8 +323,8 @@ export default function Projects({
                               </span>
                             )}
                           </div>
-                          <h3 className="text-base font-bold text-white font-['Space_Grotesk'] truncate">{project.name}</h3>
-                          <p className="text-[11px] text-[#C7A248]/80 font-mono mt-1">
+                          <h3 className="text-[16px] font-semibold text-white font-['Space_Grotesk'] truncate">{project.name}</h3>
+                          <p className="text-[11px] text-[#D4AF5A]/80 font-mono mt-1">
                             {project.campaignName || 'Independent Project'}
                           </p>
                         </div>
@@ -335,7 +335,7 @@ export default function Projects({
                         </div>
                       </div>
 
-                      <p className="text-xs text-neutral-500 leading-relaxed min-h-[38px] mt-4">
+                      <p className="text-[12px] text-neutral-500 leading-6 min-h-[42px] mt-4">
                         {project.description || 'No project brief added yet.'}
                       </p>
 
@@ -348,28 +348,28 @@ export default function Projects({
                         <button
                           onClick={() => onOpenProject(project.id)}
                           disabled={project.status === 'archived'}
-                          className="flex items-center gap-2 px-3 py-2 bg-[#C7A248] text-black rounded-lg text-[11px] font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="flex items-center gap-2 px-3 py-2 bg-[#D4AF5A] text-[#15171B] rounded-lg text-[11px] font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           <Play className="w-3.5 h-3.5" />
                           {isActive ? 'Continue' : 'Open'}
                         </button>
                         <button
                           onClick={() => beginEdit(project)}
-                          className="flex items-center gap-2 px-3 py-2 bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white rounded-lg text-[11px] font-semibold"
+                          className="flex items-center gap-2 px-3 py-2 bg-white/[0.025] border border-white/[0.07] text-neutral-400 hover:text-white rounded-lg text-[11px] font-semibold"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           Edit
                         </button>
                         <button
                           onClick={() => onDuplicateProject(project.id)}
-                          className="flex items-center gap-2 px-3 py-2 bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white rounded-lg text-[11px] font-semibold"
+                          className="flex items-center gap-2 px-3 py-2 bg-white/[0.025] border border-white/[0.07] text-neutral-400 hover:text-white rounded-lg text-[11px] font-semibold"
                         >
                           <Copy className="w-3.5 h-3.5" />
                           Duplicate
                         </button>
                         <button
                           onClick={() => onToggleArchiveProject(project.id)}
-                          className="flex items-center gap-2 px-3 py-2 bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white rounded-lg text-[11px] font-semibold"
+                          className="flex items-center gap-2 px-3 py-2 bg-white/[0.025] border border-white/[0.07] text-neutral-400 hover:text-white rounded-lg text-[11px] font-semibold"
                         >
                           {project.status === 'archived' ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
                           {project.status === 'archived' ? 'Restore' : 'Archive'}
@@ -380,7 +380,7 @@ export default function Projects({
                               onDeleteProject(project.id);
                             }
                           }}
-                          className="flex items-center gap-2 px-3 py-2 bg-neutral-950 border border-neutral-800 text-neutral-600 hover:text-rose-400 hover:border-rose-500/20 rounded-lg text-[11px] font-semibold"
+                          className="flex items-center gap-2 px-3 py-2 bg-white/[0.025] border border-white/[0.07] text-neutral-600 hover:text-rose-400 hover:border-rose-500/20 rounded-lg text-[11px] font-semibold"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Delete
